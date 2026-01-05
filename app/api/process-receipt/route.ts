@@ -4,12 +4,12 @@ export async function POST(request: NextRequest) {
   try {
     const { image, categories } = await request.json()
 
-    const apiKey = process.env.NEXT_PUBLIC_CLAUDE_API_KEY
+    const apiKey = process.env.CLAUDE_API_KEY
     
     if (!apiKey) {
       console.error('Claude API key not configured')
       return NextResponse.json(
-        { error: 'Claude API key not configured. Please add NEXT_PUBLIC_CLAUDE_API_KEY to your .env.local file.' },
+        { error: 'Claude API key not configured. Please add CLAUDE_API_KEY to your .env.local file.' },
         { status: 500 }
       )
     }
@@ -37,13 +37,32 @@ export async function POST(request: NextRequest) {
                 data: image 
               }
             },
-            {
-              type: "text",
-              text: `Extract all items from this receipt. Return ONLY valid JSON array, no markdown, no explanation. Format:
-[{"name": "item name", "price": 12.99, "quantity": 1, "category": "Groceries"}]
-Categories: ${categories.join(', ')}.
+           {
+  type: "text",
+  text: `Extract all items from this receipt with their FINAL prices after discounts.
+
+IMPORTANT - Discount Handling:
+- Discounts appear on the line BELOW their item, with a trailing minus (e.g., "3.00-")
+- Discount lines often have coupon codes like "0000365824 / 1114874"
+- The item code in the discount line (after the /) matches the item above
+- SUBTRACT the discount from the item's price and return the NET price
+- Do NOT create separate line items for discounts
+
+Examples:
+  "COOKIE BAR         11.99"
+  "0000366012 / 1114874   3.00-"
+  → Return: {"name": "COOKIE BAR", "price": 8.99, "quantity": 1, "category": "..."}
+
+  "POPCRN ZEBRA       7.99"
+  "0000365824 / 1124714   3.00-"
+  → Return: {"name": "POPCRN ZEBRA", "price": 4.99, "quantity": 1, "category": "..."}
+
+Return ONLY a valid JSON array, no markdown, no explanation.
+Format: [{"name": "item name", "price": 8.99, "quantity": 1, "category": "Groceries"}]
+
+Available categories: ${categories.join(', ')}.
 If you can't read the receipt clearly, return an empty array [].`
-            }
+}
           ]
         }]
       })
@@ -76,7 +95,22 @@ If you can't read the receipt clearly, return an empty array [].`
     const items = JSON.parse(cleaned)
     console.log('Extracted items:', items)
     
-    return NextResponse.json({ items })
+    // Combine duplicate items (same name and price)
+    const combined = items.reduce((acc: any[], item: any) => {
+      const existing = acc.find(
+        (i) => i.name === item.name && i.price === item.price
+      )
+      if (existing) {
+        existing.quantity += item.quantity || 1
+      } else {
+        acc.push({ ...item, quantity: item.quantity || 1 })
+      }
+      return acc
+    }, [])
+    
+    console.log('Combined items:', combined)
+    
+    return NextResponse.json({ items: combined })
   } catch (error: any) {
     console.error('Receipt processing error:', error)
     return NextResponse.json(
@@ -85,4 +119,3 @@ If you can't read the receipt clearly, return an empty array [].`
     )
   }
 }
-

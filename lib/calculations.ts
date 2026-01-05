@@ -8,6 +8,7 @@ export interface Expense {
   split: boolean
   split_ratio: Record<string, number>
   source: 'receipt' | 'manual'
+  receipt_group?: string // e.g., "Costco 12/12/2025"
   created_at?: string
   updated_at?: string
 }
