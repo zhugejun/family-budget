@@ -15,7 +15,7 @@ import { useExpenses } from '@/hooks/useExpenses';
 import { useCategories } from '@/hooks/useCategories';
 import { processReceiptWithClaude } from '@/lib/claude';
 import { calculateSplits } from '@/lib/calculations';
-import { ExpenseTable } from '@/components/dashboard/expense-table';
+import { ExpenseGroups } from '@/components/dashboard/expense-groups';
 import { SummaryCard } from '@/components/dashboard/summary-card';
 import { ReceiptUploadZone } from '@/components/dashboard/receipt-upload-zone';
 import { ManualExpenseForm } from '@/components/dashboard/manual-expense-form';
@@ -248,7 +248,7 @@ export default function DashboardPage() {
 
         {/* Expenses Tab */}
         {activeTab === 'expenses' && (
-          <ExpenseTable
+          <ExpenseGroups
             expenses={expenses}
             categories={categories}
             familyMembers={FAMILY_MEMBERS}
