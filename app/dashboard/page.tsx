@@ -53,6 +53,18 @@ export default function DashboardPage() {
     try {
       const items = await processReceiptWithClaude(base64Image, categories);
 
+      // Generate receipt group name with timestamp
+      const now = new Date();
+      const receiptGroup = `Receipt - ${now.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })} ${now.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      })}`;
+
       const newExpenses = items.map((item) => ({
         name: item.name,
         price: parseFloat(item.price.toString()) || 0,
@@ -60,7 +72,8 @@ export default function DashboardPage() {
         category: item.category || 'Other',
         split: false,
         split_ratio: { ...defaultRatio },
-        source: 'manual' as const,
+        source: 'receipt' as const,
+        receipt_group: receiptGroup,
       }));
 
       await addMultipleExpenses(newExpenses);
