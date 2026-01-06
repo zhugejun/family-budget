@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Receipt,
   Loader2,
@@ -15,11 +15,13 @@ import { useExpenses } from '@/hooks/useExpenses';
 import { useCategories } from '@/hooks/useCategories';
 import { processReceiptWithClaude } from '@/lib/claude';
 import { calculateSplits } from '@/lib/calculations';
+import { filterByMonth, getCurrentMonth } from '@/lib/date-utils';
 import { ExpenseGroups } from '@/components/dashboard/expense-groups';
 import { SummaryCard } from '@/components/dashboard/summary-card';
 import { ReceiptUploadZone } from '@/components/dashboard/receipt-upload-zone';
 import { ManualExpenseForm } from '@/components/dashboard/manual-expense-form';
 import { SettingsPanel } from '@/components/dashboard/settings-panel';
+import { MonthSelector } from '@/components/dashboard/month-selector';
 
 const FAMILY_MEMBERS = ['You', 'Partner'];
 
@@ -47,6 +49,22 @@ export default function DashboardPage() {
     [FAMILY_MEMBERS[1]]: 50,
   });
   const [showSettings, setShowSettings] = useState(false);
+
+  // Month filtering state
+  const [selectedYear, setSelectedYear] = useState(
+    () => getCurrentMonth().year
+  );
+  const [selectedMonth, setSelectedMonth] = useState(
+    () => getCurrentMonth().month
+  );
+
+  // Filter expenses by selected month
+  const filteredExpenses = filterByMonth(expenses, selectedYear, selectedMonth);
+
+  const handleMonthChange = (year: number, month: number) => {
+    setSelectedYear(year);
+    setSelectedMonth(month);
+  };
 
   const handleReceiptProcessing = async (base64Image: string) => {
     setIsProcessing(true);
@@ -138,11 +156,12 @@ export default function DashboardPage() {
     });
   };
 
-  const totalAmount = expenses.reduce(
+  // Calculate totals from filtered expenses
+  const totalAmount = filteredExpenses.reduce(
     (sum, exp) => sum + exp.price * exp.quantity,
     0
   );
-  const splits = calculateSplits(expenses, FAMILY_MEMBERS);
+  const splits = calculateSplits(filteredExpenses, FAMILY_MEMBERS);
 
   if (expensesLoading) {
     return (
@@ -217,6 +236,16 @@ export default function DashboardPage() {
           ))}
         </div>
 
+        {/* Month Selector */}
+        <div className='mb-6'>
+          <MonthSelector
+            year={selectedYear}
+            month={selectedMonth}
+            onChange={handleMonthChange}
+            expenseCount={filteredExpenses.length}
+          />
+        </div>
+
         {/* Tabs */}
         <div className='flex gap-2 mb-6'>
           {[
@@ -225,7 +254,7 @@ export default function DashboardPage() {
             {
               id: 'expenses',
               icon: PieChart,
-              label: `Expenses (${expenses.length})`,
+              label: `Expenses (${filteredExpenses.length})`,
             },
           ].map((tab) => (
             <button
@@ -262,7 +291,7 @@ export default function DashboardPage() {
         {/* Expenses Tab */}
         {activeTab === 'expenses' && (
           <ExpenseGroups
-            expenses={expenses}
+            expenses={filteredExpenses}
             categories={categories}
             familyMembers={FAMILY_MEMBERS}
             defaultRatio={defaultRatio}
