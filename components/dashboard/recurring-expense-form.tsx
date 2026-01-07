@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Slider } from '@/components/ui/slider';
 import type { RecurringExpense, FrequencyType } from '@/lib/recurring-utils';
 
 interface RecurringExpenseFormProps {
@@ -249,27 +250,47 @@ export function RecurringExpenseForm({
           {/* Split Ratio */}
           {split && (
             <div className='bg-amber-50 p-4 rounded-xl'>
-              <p className='text-sm font-medium text-stone-700 mb-3'>
+              <p className='text-sm font-medium text-stone-700 mb-4'>
                 Split Ratio
               </p>
-              {familyMembers.map((member) => (
-                <div key={member} className='flex items-center gap-3 mb-2'>
-                  <label className='w-24 text-sm text-stone-600'>
-                    {member}
-                  </label>
-                  <input
-                    type='range'
-                    min='0'
-                    max='100'
-                    value={splitRatio[member] || 0}
-                    onChange={(e) => updateSplitRatio(member, e.target.value)}
-                    className='flex-1'
-                  />
-                  <span className='w-16 text-sm font-medium text-stone-800'>
-                    {splitRatio[member] || 0}%
-                  </span>
+
+              {/* Member labels and percentages */}
+              <div className='flex items-center justify-between mb-3'>
+                <div className='text-center'>
+                  <p className='text-xs text-stone-600 mb-1'>
+                    {familyMembers[0]}
+                  </p>
+                  <p className='text-xl font-bold text-emerald-600'>
+                    {splitRatio[familyMembers[0]] || 0}%
+                  </p>
                 </div>
-              ))}
+                <div className='text-center'>
+                  <p className='text-xs text-stone-600 mb-1'>
+                    {familyMembers[1]}
+                  </p>
+                  <p className='text-xl font-bold text-violet-600'>
+                    {splitRatio[familyMembers[1]] || 0}%
+                  </p>
+                </div>
+              </div>
+
+              {/* Slider */}
+              <Slider
+                value={[splitRatio[familyMembers[0]] || 50]}
+                onValueChange={(value) =>
+                  updateSplitRatio(familyMembers[0], value[0].toString())
+                }
+                min={0}
+                max={100}
+                step={1}
+                className='w-full'
+              />
+
+              {/* Visual guide */}
+              <div className='flex justify-between text-xs text-stone-400 mt-2'>
+                <span>← {familyMembers[0]}</span>
+                <span>{familyMembers[1]} →</span>
+              </div>
             </div>
           )}
 

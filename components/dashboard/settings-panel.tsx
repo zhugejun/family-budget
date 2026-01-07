@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Slider } from '@/components/ui/slider';
 import { CategoryManager } from './category-manager';
 
 interface SettingsDialogProps {
@@ -60,45 +61,44 @@ export function SettingsDialog({
               customize individual items.
             </p>
 
+            {/* Single Slider with both members */}
             <div className='space-y-4'>
-              {/* Member 1 */}
-              <div>
-                <div className='flex items-center justify-between mb-2'>
-                  <span className='font-medium text-stone-700'>
+              {/* Member labels and percentages */}
+              <div className='flex items-center justify-between'>
+                <div className='text-center'>
+                  <p className='text-sm font-medium text-stone-600 mb-1'>
                     {familyMembers[0]}
-                  </span>
-                  <span className='text-lg font-bold text-emerald-600'>
+                  </p>
+                  <p className='text-2xl font-bold text-emerald-600'>
                     {defaultRatio[familyMembers[0]]}%
-                  </span>
+                  </p>
                 </div>
-                <input
-                  type='range'
-                  min='0'
-                  max='100'
-                  value={defaultRatio[familyMembers[0]]}
-                  onChange={(e) =>
-                    onUpdateDefaultRatio(familyMembers[0], e.target.value)
-                  }
-                  className='w-full h-3 bg-gradient-to-r from-emerald-300 to-violet-300 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-stone-400 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform'
-                />
+                <div className='text-center'>
+                  <p className='text-sm font-medium text-stone-600 mb-1'>
+                    {familyMembers[1]}
+                  </p>
+                  <p className='text-2xl font-bold text-violet-600'>
+                    {defaultRatio[familyMembers[1]]}%
+                  </p>
+                </div>
               </div>
 
-              {/* Member 2 */}
-              <div>
-                <div className='flex items-center justify-between mb-2'>
-                  <span className='font-medium text-stone-700'>
-                    {familyMembers[1]}
-                  </span>
-                  <span className='text-lg font-bold text-violet-600'>
-                    {defaultRatio[familyMembers[1]]}%
-                  </span>
-                </div>
-                <div className='h-3 bg-gradient-to-r from-violet-300 to-emerald-300 rounded-full'>
-                  <div
-                    className='h-full bg-violet-500 rounded-full transition-all'
-                    style={{ width: `${defaultRatio[familyMembers[1]]}%` }}
-                  />
-                </div>
+              {/* Slider */}
+              <Slider
+                value={[defaultRatio[familyMembers[0]]]}
+                onValueChange={(value) =>
+                  onUpdateDefaultRatio(familyMembers[0], value[0].toString())
+                }
+                min={0}
+                max={100}
+                step={1}
+                className='w-full'
+              />
+
+              {/* Visual guide */}
+              <div className='flex justify-between text-xs text-stone-400'>
+                <span>← More for {familyMembers[0]}</span>
+                <span>More for {familyMembers[1]} →</span>
               </div>
             </div>
 
