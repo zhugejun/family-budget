@@ -19,7 +19,10 @@ export function ReceiptUploadZone({
       e.preventDefault();
       setDragOver(false);
       const file = e.dataTransfer.files[0];
-      if (file && file.type.startsWith('image/')) {
+      if (
+        file &&
+        (file.type.startsWith('image/') || file.type === 'application/pdf')
+      ) {
         onImageUpload(file);
       }
     },
@@ -56,12 +59,12 @@ export function ReceiptUploadZone({
             <Upload className='w-8 h-8 text-amber-600' />
           </div>
           <p className='text-stone-700 font-medium text-lg mb-2'>
-            Drop receipt image here
+            Drop receipt here
           </p>
-          <p className='text-stone-400 mb-4'>or click to browse</p>
+          <p className='text-stone-400 mb-4'>Image or PDF, up to 10MB</p>
           <input
             type='file'
-            accept='image/*'
+            accept='image/*,application/pdf'
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (file) onImageUpload(file);
@@ -70,7 +73,7 @@ export function ReceiptUploadZone({
           />
           <div className='inline-flex items-center gap-2 px-4 py-2 bg-amber-100 rounded-full text-amber-700 text-sm'>
             <Camera className='w-4 h-4' />
-            Supports JPG, PNG
+            Supports JPG, PNG, PDF
           </div>
         </>
       )}

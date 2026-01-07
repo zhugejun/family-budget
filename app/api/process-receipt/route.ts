@@ -21,10 +21,10 @@ export async function POST(request: NextRequest) {
       headers: { 
         "Content-Type": "application/json",
         "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01"
+        "anthropic-version": "2024-09-29"
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-4-20250929",
         max_tokens: 1000,
         messages: [{
           role: "user",

@@ -21,6 +21,7 @@ import { useRecurringExpenses } from '@/hooks/useRecurringExpenses';
 import { processReceiptWithClaude } from '@/lib/claude';
 import { calculateSplits } from '@/lib/calculations';
 import { filterByMonth, getCurrentMonth } from '@/lib/date-utils';
+import { processReceiptFile, validateFileSize } from '@/lib/image-processing';
 import { ExpenseGroups } from '@/components/dashboard/expense-groups';
 import { SummaryCard } from '@/components/dashboard/summary-card';
 import { ReceiptUploadZone } from '@/components/dashboard/receipt-upload-zone';
@@ -164,54 +165,56 @@ export default function DashboardPage() {
   };
 
   const handleImageUpload = async (file: File) => {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const base64 = e.target?.result?.toString().split(',')[1];
-      if (!base64) return;
+    // Validate file size (max 10MB)
+    if (!validateFileSize(file, 10)) {
+      alert('File size must be less than 10MB. Please choose a smaller file.');
+      return;
+    }
 
-      setIsProcessing(true);
-      try {
-        // Process receipt with AI
-        const items = await processReceiptWithClaude(base64, categories);
+    setIsProcessing(true);
+    try {
+      // Process the file (compress, convert to grayscale, or convert PDF to image)
+      const processedBase64 = await processReceiptFile(file);
 
-        // Generate receipt group name
-        const now = new Date();
-        const receiptGroup = `Receipt - ${now.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        })} ${now.toLocaleTimeString('en-US', {
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true,
-        })}`;
+      // Process receipt with AI
+      const items = await processReceiptWithClaude(processedBase64, categories);
 
-        // Upload original image
-        const uploadedImage = await uploadImage(file, receiptGroup);
+      // Generate receipt group name
+      const now = new Date();
+      const receiptGroup = `Receipt - ${now.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })} ${now.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      })}`;
 
-        // Create expenses
-        const newExpenses = items.map((item) => ({
-          name: item.name,
-          price: parseFloat(item.price.toString()) || 0,
-          quantity: item.quantity || 1,
-          category: item.category || 'Other',
-          split: false,
-          split_ratio: { ...defaultRatio },
-          source: 'receipt' as const,
-          receipt_group: receiptGroup,
-          receipt_image_id: uploadedImage?.id,
-        }));
+      // Upload original image (keep original for gallery)
+      const uploadedImage = await uploadImage(file, receiptGroup);
 
-        await addMultipleExpenses(newExpenses);
-      } catch (error) {
-        console.error('Error processing receipt:', error);
-        alert(
-          'Could not process receipt. Please try again or add items manually.'
-        );
-      }
-      setIsProcessing(false);
-    };
-    reader.readAsDataURL(file);
+      // Create expenses
+      const newExpenses = items.map((item) => ({
+        name: item.name,
+        price: parseFloat(item.price.toString()) || 0,
+        quantity: item.quantity || 1,
+        category: item.category || 'Other',
+        split: false,
+        split_ratio: { ...defaultRatio },
+        source: 'receipt' as const,
+        receipt_group: receiptGroup,
+        receipt_image_id: uploadedImage?.id,
+      }));
+
+      await addMultipleExpenses(newExpenses);
+    } catch (error) {
+      console.error('Error processing receipt:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to process receipt';
+      alert(`${errorMessage}. Please try again or add items manually.`);
+    }
+    setIsProcessing(false);
   };
 
   const handleAddManualExpense = async (item: {
