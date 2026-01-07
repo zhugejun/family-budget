@@ -164,57 +164,110 @@ export default function DashboardPage() {
     setIsProcessing(false);
   };
 
-  const handleImageUpload = async (file: File) => {
-    // Validate file size (max 10MB)
-    if (!validateFileSize(file, 10)) {
-      alert('File size must be less than 10MB. Please choose a smaller file.');
-      return;
+  // State for batch upload progress
+  const [uploadProgress, setUploadProgress] = useState<{
+    total: number;
+    completed: number;
+    failed: number;
+    currentFile?: string;
+  } | null>(null);
+
+  const handleMultipleImageUpload = async (files: File[]) => {
+    // Validate all file sizes first
+    const oversizedFiles = files.filter((file) => !validateFileSize(file, 10));
+    if (oversizedFiles.length > 0) {
+      alert(
+        `${oversizedFiles.length} file(s) exceed 10MB limit. They will be skipped.`
+      );
+      files = files.filter((file) => validateFileSize(file, 10));
     }
+
+    if (files.length === 0) return;
 
     setIsProcessing(true);
-    try {
-      // Process the file (compress, convert to grayscale, or convert PDF to image)
-      const processedBase64 = await processReceiptFile(file);
+    setUploadProgress({
+      total: files.length,
+      completed: 0,
+      failed: 0,
+    });
 
-      // Process receipt with AI
-      const items = await processReceiptWithClaude(processedBase64, categories);
+    let successCount = 0;
+    let failCount = 0;
 
-      // Generate receipt group name
-      const now = new Date();
-      const receiptGroup = `Receipt - ${now.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })} ${now.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      })}`;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
 
-      // Upload original image (keep original for gallery)
-      const uploadedImage = await uploadImage(file, receiptGroup);
+      setUploadProgress({
+        total: files.length,
+        completed: i,
+        failed: failCount,
+        currentFile: file.name,
+      });
 
-      // Create expenses
-      const newExpenses = items.map((item) => ({
-        name: item.name,
-        price: parseFloat(item.price.toString()) || 0,
-        quantity: item.quantity || 1,
-        category: item.category || 'Other',
-        split: false,
-        split_ratio: { ...defaultRatio },
-        source: 'receipt' as const,
-        receipt_group: receiptGroup,
-        receipt_image_id: uploadedImage?.id,
-      }));
+      try {
+        // Process the file (compress, convert to grayscale, or convert PDF to image)
+        const processedBase64 = await processReceiptFile(file);
 
-      await addMultipleExpenses(newExpenses);
-    } catch (error) {
-      console.error('Error processing receipt:', error);
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to process receipt';
-      alert(`${errorMessage}. Please try again or add items manually.`);
+        // Process receipt with AI
+        const items = await processReceiptWithClaude(
+          processedBase64,
+          categories
+        );
+
+        // Generate receipt group name
+        const now = new Date();
+        const receiptGroup = `Receipt - ${now.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        })} ${now.toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        })} (${i + 1}/${files.length})`;
+
+        // Upload original image (keep original for gallery)
+        const uploadedImage = await uploadImage(file, receiptGroup);
+
+        // Create expenses
+        const newExpenses = items.map((item) => ({
+          name: item.name,
+          price: parseFloat(item.price.toString()) || 0,
+          quantity: item.quantity || 1,
+          category: item.category || 'Other',
+          split: false,
+          split_ratio: { ...defaultRatio },
+          source: 'receipt' as const,
+          receipt_group: receiptGroup,
+          receipt_image_id: uploadedImage?.id,
+        }));
+
+        await addMultipleExpenses(newExpenses);
+        successCount++;
+      } catch (error) {
+        console.error(`Error processing ${file.name}:`, error);
+        failCount++;
+      }
     }
-    setIsProcessing(false);
+
+    // Final update
+    setUploadProgress({
+      total: files.length,
+      completed: successCount,
+      failed: failCount,
+    });
+
+    // Show summary
+    setTimeout(() => {
+      setIsProcessing(false);
+      setUploadProgress(null);
+
+      if (failCount > 0) {
+        alert(
+          `Batch processing complete!\n✓ ${successCount} successful\n✗ ${failCount} failed`
+        );
+      }
+    }, 1500);
   };
 
   const handleAddManualExpense = async (item: {
@@ -414,11 +467,11 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* Upload Tab */}
         {activeTab === 'upload' && (
           <ReceiptUploadZone
             isProcessing={isProcessing}
-            onImageUpload={handleImageUpload}
+            onMultipleImageUpload={handleMultipleImageUpload}
+            processingStatus={uploadProgress || undefined}
           />
         )}
 
