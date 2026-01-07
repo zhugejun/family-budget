@@ -102,6 +102,153 @@ Now you have:
 - ✅ Data persistence
 - ✅ Multi-device sync
 
+## 💾 Deployment Options
+
+You have **two ways** to run this app - choose based on your needs:
+
+### Option 1: Cloud (Supabase) ☁️
+
+**Best for:**
+
+- Multi-device access
+- Cloud backup
+- User authentication
+- Production deployment
+
+**Features:**
+
+- ✅ Cloud database
+- ✅ User accounts
+- ✅ Multi-device sync
+- ✅ Automatic backups
+
+**Setup:** See [Supabase Setup](#-option-1-supabase-cloud-5-minutes) below
+
+### Option 2: Local (SQLite3) 💻
+
+**Best for:**
+
+- Privacy-first users
+- Offline use
+- Local development
+- No cloud dependencies
+
+**Features:**
+
+- ✅ 100% local database
+- ✅ No authentication needed
+- ✅ Completely offline
+- ✅ Fast & private
+
+**Setup:** See [SQLite Setup](#-option-2-sqlite3-local-5-minutes) below
+
+---
+
+## 🔧 Option 1: Supabase Cloud (5 minutes)
+
+To enable cloud features with authentication and sync:
+
+### 1. Create Supabase Project
+
+1. Go to [supabase.com](https://supabase.com)
+2. Create new project (free tier)
+3. Wait for database to provision
+
+### 2. Run Database Schema
+
+1. Go to **SQL Editor** in Supabase
+2. Copy contents of `supabase-schema.sql`
+3. Run it
+
+### 3. Get API Credentials
+
+1. Go to **Settings** > **API**
+2. Copy:
+   - Project URL
+   - `anon` `public` key
+
+### 4. Configure Environment
+
+```bash
+cp env.example .env.local
+```
+
+Edit `.env.local`:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+NEXT_PUBLIC_CLAUDE_API_KEY=sk-ant-your-key-here  # Optional
+```
+
+### 5. Restart Dev Server
+
+```bash
+npm run dev
+```
+
+Now you have:
+
+- ✅ User authentication
+- ✅ Data persistence
+- ✅ Multi-device sync
+
+---
+
+## 💻 Option 2: SQLite3 Local (5 minutes)
+
+To run completely locally with no cloud dependencies:
+
+### 1. Switch to SQLite Branch
+
+```bash
+git checkout local-sqlite
+```
+
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+_Dependencies already include `better-sqlite3`_
+
+### 3. Run Dev Server
+
+```bash
+npm run dev
+```
+
+That's it! The database will be auto-created at `data/budget.db`
+
+### How It Works
+
+- ✅ **No login** - Just open and use
+- ✅ **No setup** - Database created automatically
+- ✅ **All features work** - Expenses, analytics, recurring, etc.
+- ✅ **100% offline** - No internet needed
+
+### Data Location
+
+- **Database:** `data/budget.db` (60KB)
+- **Backups:** Copy the `.db` file
+
+### Switching Branches
+
+```bash
+# Use cloud version (Supabase)
+git checkout main
+npm run dev
+
+# Use local version (SQLite)
+git checkout local-sqlite
+npm run dev
+```
+
+For detailed SQLite setup, see `.agent/LOCAL_SQLITE_SETUP.md`
+
+---
+
 ## 🎯 How to Use
 
 ### For New Users
