@@ -306,7 +306,7 @@ export default function DashboardPage() {
     <div className='min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50'>
       {/* Header */}
       <header className='bg-white/70 backdrop-blur-lg border-b border-amber-200/50 sticky top-0 z-50'>
-        <div className='max-w-4xl mx-auto px-6 py-4'>
+        <div className='max-w-6xl mx-auto px-6 py-4'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-3'>
               <div className='w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-200'>
@@ -351,7 +351,7 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className='max-w-4xl mx-auto px-6 py-8'>
+      <main className='max-w-6xl mx-auto px-6 py-8'>
         {/* Summary Cards */}
         <div className='grid grid-cols-2 gap-4 mb-8'>
           {FAMILY_MEMBERS.map((member, idx) => (
