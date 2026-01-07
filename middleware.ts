@@ -3,6 +3,16 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
+  // Bypass authentication for local SQLite mode (no Supabase credentials)
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.log('🔓 Running in local SQLite mode - auth bypassed');
+    return NextResponse.next({
+      request: {
+        headers: req.headers,
+      },
+    });
+  }
+
   let res = NextResponse.next({
     request: {
       headers: req.headers,

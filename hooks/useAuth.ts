@@ -12,6 +12,14 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Skip auth in local SQLite mode
+    if (!supabase) {
+      setLoading(false)
+      // Return a mock user for local development
+      setUser({ id: 'local-user' } as User)
+      return
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
@@ -27,6 +35,7 @@ export function useAuth() {
   }, [])
 
   const signUp = async (email: string, password: string) => {
+    if (!supabase) throw new Error('Auth not available in local mode')
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -36,6 +45,7 @@ export function useAuth() {
   }
 
   const signIn = async (email: string, password: string) => {
+    if (!supabase) throw new Error('Auth not available in local mode')
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -45,6 +55,7 @@ export function useAuth() {
   }
 
   const signOut = async () => {
+    if (!supabase) throw new Error('Auth not available in local mode')
     const { error } = await supabase.auth.signOut()
     if (error) throw error
   }

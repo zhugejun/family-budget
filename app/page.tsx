@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import {
   Receipt,
   Camera,
@@ -11,6 +12,14 @@ import {
 } from 'lucide-react';
 
 export default function Home() {
+  // Redirect to dashboard in local SQLite mode (no Supabase)
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    redirect('/dashboard');
+  }
+
   return (
     <div className='min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50'>
       {/* Header */}
