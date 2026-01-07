@@ -9,8 +9,21 @@ export interface Expense {
   split_ratio: Record<string, number>
   source: 'receipt' | 'manual'
   receipt_group?: string // e.g., "Costco 12/12/2025"
+  receipt_image_id?: string // Links to receipt_images table
   created_at?: string
   updated_at?: string
+}
+
+export interface ReceiptImage {
+  id: string
+  user_id: string
+  receipt_group: string
+  image_url: string
+  thumbnail_url?: string
+  file_name?: string
+  file_size?: number
+  mime_type?: string
+  uploaded_at: string
 }
 
 /**

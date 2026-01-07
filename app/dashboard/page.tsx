@@ -10,10 +10,12 @@ import {
   Camera,
   Plus,
   BarChart3,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useCategories } from '@/hooks/useCategories';
+import { useReceiptImages } from '@/hooks/useReceiptImages';
 import { processReceiptWithClaude } from '@/lib/claude';
 import { calculateSplits } from '@/lib/calculations';
 import { filterByMonth, getCurrentMonth } from '@/lib/date-utils';
@@ -24,6 +26,7 @@ import { ManualExpenseForm } from '@/components/dashboard/manual-expense-form';
 import { SettingsPanel } from '@/components/dashboard/settings-panel';
 import { MonthSelector } from '@/components/dashboard/month-selector';
 import { AnalyticsPanel } from '@/components/dashboard/analytics-panel';
+import { ReceiptGallery } from '@/components/dashboard/receipt-gallery';
 
 const FAMILY_MEMBERS = ['You', 'Partner'];
 
@@ -42,6 +45,12 @@ export default function DashboardPage() {
     updateCategory: updateCategoryHook,
     deleteCategory: deleteCategoryHook,
   } = useCategories(user?.id);
+  const {
+    images: receiptImages,
+    loading: imagesLoading,
+    uploadImage,
+    deleteImage,
+  } = useReceiptImages(user?.id);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState('upload');
@@ -106,11 +115,53 @@ export default function DashboardPage() {
     setIsProcessing(false);
   };
 
-  const handleImageUpload = (file: File) => {
+  const handleImageUpload = async (file: File) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const base64 = e.target?.result?.toString().split(',')[1];
-      if (base64) handleReceiptProcessing(base64);
+      if (!base64) return;
+
+      setIsProcessing(true);
+      try {
+        // Process receipt with AI
+        const items = await processReceiptWithClaude(base64, categories);
+
+        // Generate receipt group name
+        const now = new Date();
+        const receiptGroup = `Receipt - ${now.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        })} ${now.toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        })}`;
+
+        // Upload original image
+        const uploadedImage = await uploadImage(file, receiptGroup);
+
+        // Create expenses
+        const newExpenses = items.map((item) => ({
+          name: item.name,
+          price: parseFloat(item.price.toString()) || 0,
+          quantity: item.quantity || 1,
+          category: item.category || 'Other',
+          split: false,
+          split_ratio: { ...defaultRatio },
+          source: 'receipt' as const,
+          receipt_group: receiptGroup,
+          receipt_image_id: uploadedImage?.id,
+        }));
+
+        await addMultipleExpenses(newExpenses);
+      } catch (error) {
+        console.error('Error processing receipt:', error);
+        alert(
+          'Could not process receipt. Please try again or add items manually.'
+        );
+      }
+      setIsProcessing(false);
     };
     reader.readAsDataURL(file);
   };
@@ -259,6 +310,11 @@ export default function DashboardPage() {
               label: `Expenses (${filteredExpenses.length})`,
             },
             { id: 'analytics', icon: BarChart3, label: 'Analytics' },
+            {
+              id: 'gallery',
+              icon: ImageIcon,
+              label: `Gallery (${receiptImages.length})`,
+            },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -314,6 +370,25 @@ export default function DashboardPage() {
             selectedYear={selectedYear}
             selectedMonth={selectedMonth}
           />
+        )}
+
+        {/* Gallery Tab */}
+        {activeTab === 'gallery' && (
+          <div>
+            <div className='mb-4'>
+              <h2 className='text-2xl font-bold text-stone-800'>
+                Receipt Images
+              </h2>
+              <p className='text-stone-600'>
+                View and manage your saved receipt photos
+              </p>
+            </div>
+            <ReceiptGallery
+              images={receiptImages}
+              onDelete={deleteImage}
+              loading={imagesLoading}
+            />
+          </div>
         )}
 
         {/* Info Box */}
