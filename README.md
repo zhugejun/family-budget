@@ -23,6 +23,7 @@ Your family expense tracking app is **production-ready** with:
 - **Tailwind CSS v4** for styling
 - **Supabase SSR** for auth & database
 - **Claude API** for receipt OCR
+- **Recharts** for analytics visualizations
 - **shadcn/ui** Orange theme
 
 ## 🚀 Quick Start
@@ -138,6 +139,14 @@ Now you have:
 - View expenses filtered by specific month
 - See monthly totals and expense counts
 
+**View Analytics:**
+
+- Click "Analytics" tab for visual insights
+- Category pie chart shows spending breakdown
+- Daily spending chart tracks expenses over time
+- Member comparison shows You vs Partner spending
+- Trend cards display key metrics and month-over-month changes
+
 ## 📁 Project Structure
 
 ```
@@ -152,10 +161,15 @@ family-expense/
 │   └── globals.css         # Styles + theme
 ├── components/
 │   ├── dashboard/
-│   │   ├── month-selector.tsx      # Month navigation
-│   │   ├── expense-groups.tsx      # Expense list
-│   │   ├── expense-table.tsx       # Expense table
-│   │   └── ...                     # Other components
+│   │   ├── month-selector.tsx         # Month navigation
+│   │   ├── analytics-panel.tsx        # Analytics container
+│   │   ├── category-pie-chart.tsx     # Category breakdown chart
+│   │   ├── spending-chart.tsx         # Daily spending chart
+│   │   ├── spending-comparison.tsx    # Member comparison chart
+│   │   ├── trend-cards.tsx            # Trend insights cards
+│   │   ├── expense-groups.tsx         # Expense list
+│   │   ├── expense-table.tsx          # Expense table
+│   │   └── ...                        # Other components
 │   └── FamilyBudgetApp.tsx # Main app logic
 ├── hooks/
 │   ├── useAuth.ts          # Authentication
@@ -166,6 +180,7 @@ family-expense/
 │   ├── claude.ts           # Claude API
 │   ├── calculations.ts     # Split calculations
 │   ├── date-utils.ts       # Month filtering utilities
+│   ├── analytics.ts        # Analytics data processing
 │   └── utils.ts            # Utilities
 ├── middleware.ts           # Route protection
 ├── supabase-schema.sql     # Database schema
@@ -203,8 +218,7 @@ family-expense/
 
 See `.agent/IMPLEMENTATION_PLAN.md` for detailed roadmap. Next features coming:
 
-- 📊 **Dashboard Analytics** - Charts and spending insights
-- 🖼️ **Receipt Image Gallery** - View and store original receipt photos
+- ️ **Receipt Image Gallery** - View and store original receipt photos
 - 🔄 **Recurring Expenses** - Auto-track subscriptions and bills
 - 💻 **Local Hosting Options** - Run without Supabase (SQLite/JSON)
 
