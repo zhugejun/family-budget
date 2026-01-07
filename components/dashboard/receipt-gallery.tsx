@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { ImageIcon, Trash2, Calendar, X } from 'lucide-react';
 import type { ReceiptImage } from '@/lib/calculations';
-import { ReceiptLightbox } from './receipt-lightbox';
+import { ReceiptLightbox } from '@/components/dashboard/receipt-lightbox';
 
 interface ReceiptGalleryProps {
   images: ReceiptImage[];
@@ -49,7 +49,15 @@ export function ReceiptGallery({
     );
   }
 
-  if (images.length === 0) {
+  // Filter out images without valid paths
+  const validImages = images.filter(
+    (img) =>
+      img.image_path &&
+      typeof img.image_path === 'string' &&
+      img.image_path.length > 0
+  );
+
+  if (validImages.length === 0) {
     return (
       <div className='flex flex-col items-center justify-center py-16'>
         <div className='w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mb-4'>
@@ -68,7 +76,7 @@ export function ReceiptGallery({
   return (
     <>
       <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
-        {images.map((image) => (
+        {validImages.map((image) => (
           <div
             key={image.id}
             className='group relative aspect-square rounded-xl overflow-hidden bg-stone-100 cursor-pointer transition-all hover:shadow-lg hover:scale-105'
@@ -76,7 +84,7 @@ export function ReceiptGallery({
           >
             {/* Image */}
             <Image
-              src={image.image_url}
+              src={image.image_path}
               alt={`Receipt from ${image.receipt_group}`}
               fill
               className='object-cover'

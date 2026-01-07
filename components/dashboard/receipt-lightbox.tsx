@@ -49,7 +49,7 @@ export function ReceiptLightbox({
 
   const handleDownload = async () => {
     try {
-      const response = await fetch(image.image_url);
+      const response = await fetch(image.image_path);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -167,7 +167,7 @@ export function ReceiptLightbox({
             }}
           >
             <Image
-              src={image.image_url}
+              src={image.image_path}
               alt={`Receipt from ${image.receipt_group}`}
               width={1200}
               height={1600}
