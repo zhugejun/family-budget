@@ -1,15 +1,22 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import type { RecurringExpense, FrequencyType } from '@/lib/recurring-utils';
-import { calculateNextDueDate } from '@/lib/recurring-utils';
 
 interface RecurringExpenseFormProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onSubmit: (
     data: Omit<RecurringExpense, 'id' | 'user_id' | 'created_at' | 'updated_at'>
   ) => Promise<void>;
-  onCancel: () => void;
   initialData?: RecurringExpense;
   categories: string[];
   familyMembers: string[];
@@ -17,8 +24,9 @@ interface RecurringExpenseFormProps {
 }
 
 export function RecurringExpenseForm({
+  open,
+  onOpenChange,
   onSubmit,
-  onCancel,
   initialData,
   categories,
   familyMembers,
@@ -59,7 +67,6 @@ export function RecurringExpenseForm({
 
     try {
       // Calculate next_due_date based on start_date and frequency
-      const start = new Date(startDate);
       const nextDue = initialData?.next_due_date || startDate;
 
       await onSubmit({
@@ -76,6 +83,8 @@ export function RecurringExpenseForm({
         is_active: initialData?.is_active ?? true,
         notes: notes.trim() || undefined,
       });
+
+      onOpenChange(false);
     } catch (error) {
       console.error('Error submitting recurring expense:', error);
       alert('Failed to save recurring expense');
@@ -94,23 +103,22 @@ export function RecurringExpenseForm({
   };
 
   return (
-    <div className='fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 backdrop-blur-sm p-4'>
-      <div className='bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto'>
-        {/* Header */}
-        <div className='flex items-center justify-between p-6 border-b border-stone-200'>
-          <h2 className='text-2xl font-bold text-stone-800'>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className='max-w-2xl max-h-[90vh]'>
+        <DialogHeader>
+          <DialogTitle>
             {initialData ? 'Edit Recurring Expense' : 'Add Recurring Expense'}
-          </h2>
-          <button
-            onClick={onCancel}
-            className='p-2 hover:bg-stone-100 rounded-lg transition-colors'
-          >
-            <X className='w-5 h-5' />
-          </button>
-        </div>
+          </DialogTitle>
+          <DialogDescription>
+            Set up a subscription, rent, or other recurring bill
+          </DialogDescription>
+        </DialogHeader>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className='p-6 space-y-6'>
+        <form
+          onSubmit={handleSubmit}
+          className='space-y-6 overflow-y-auto pr-2 max-h-[60vh]'
+        >
           {/* Name */}
           <div>
             <label className='block text-sm font-medium text-stone-700 mb-2'>
@@ -293,30 +301,30 @@ export function RecurringExpenseForm({
               className='w-full px-4 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none'
             />
           </div>
-
-          {/* Actions */}
-          <div className='flex gap-3 pt-4'>
-            <button
-              type='button'
-              onClick={onCancel}
-              className='flex-1 px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 font-medium rounded-lg transition-colors'
-            >
-              Cancel
-            </button>
-            <button
-              type='submit'
-              disabled={isSubmitting}
-              className='flex-1 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
-            >
-              {isSubmitting
-                ? 'Saving...'
-                : initialData
-                ? 'Update'
-                : 'Add Recurring Expense'}
-            </button>
-          </div>
         </form>
-      </div>
-    </div>
+
+        <DialogFooter>
+          <button
+            type='button'
+            onClick={() => onOpenChange(false)}
+            className='px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 font-medium rounded-lg transition-colors'
+          >
+            Cancel
+          </button>
+          <button
+            type='submit'
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className='px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+          >
+            {isSubmitting
+              ? 'Saving...'
+              : initialData
+              ? 'Update'
+              : 'Add Recurring Expense'}
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

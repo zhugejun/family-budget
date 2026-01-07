@@ -68,7 +68,7 @@ export default function DashboardPage() {
   } = useRecurringExpenses(user?.id);
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const [activeTab, setActiveTab] = useState('upload');
+  const [activeTab, setActiveTab] = useState('analytics');
   const [showRecurringForm, setShowRecurringForm] = useState(false);
   const [editingRecurring, setEditingRecurring] =
     useState<RecurringExpense | null>(null);
@@ -377,14 +377,14 @@ export default function DashboardPage() {
         {/* Tabs */}
         <div className='flex gap-2 mb-6'>
           {[
-            { id: 'upload', icon: Camera, label: 'Scan Receipt' },
-            { id: 'manual', icon: Plus, label: 'Add Manual' },
+            { id: 'analytics', icon: BarChart3, label: 'Analytics' },
             {
               id: 'expenses',
               icon: PieChart,
               label: `Expenses (${filteredExpenses.length})`,
             },
-            { id: 'analytics', icon: BarChart3, label: 'Analytics' },
+            { id: 'upload', icon: Camera, label: 'Scan Receipt' },
+            { id: 'manual', icon: Plus, label: 'Add Manual' },
             {
               id: 'gallery',
               icon: ImageIcon,
@@ -502,18 +502,19 @@ export default function DashboardPage() {
         )}
 
         {/* Recurring Expense Form Modal */}
-        {showRecurringForm && (
-          <RecurringExpenseForm
-            onSubmit={
-              editingRecurring ? handleUpdateRecurring : handleAddRecurring
-            }
-            onCancel={handleCancelRecurringForm}
-            initialData={editingRecurring || undefined}
-            categories={categories}
-            familyMembers={FAMILY_MEMBERS}
-            defaultRatio={defaultRatio}
-          />
-        )}
+        <RecurringExpenseForm
+          open={showRecurringForm}
+          onOpenChange={(open) => {
+            if (!open) handleCancelRecurringForm();
+          }}
+          onSubmit={
+            editingRecurring ? handleUpdateRecurring : handleAddRecurring
+          }
+          initialData={editingRecurring || undefined}
+          categories={categories}
+          familyMembers={FAMILY_MEMBERS}
+          defaultRatio={defaultRatio}
+        />
 
         {/* Info Box */}
         <div className='mt-8 bg-gradient-to-r from-stone-800 to-stone-700 rounded-2xl p-6 text-white'>
