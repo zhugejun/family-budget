@@ -9,6 +9,7 @@ import {
   Settings,
   Camera,
   Plus,
+  BarChart3,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useExpenses } from '@/hooks/useExpenses';
@@ -22,6 +23,7 @@ import { ReceiptUploadZone } from '@/components/dashboard/receipt-upload-zone';
 import { ManualExpenseForm } from '@/components/dashboard/manual-expense-form';
 import { SettingsPanel } from '@/components/dashboard/settings-panel';
 import { MonthSelector } from '@/components/dashboard/month-selector';
+import { AnalyticsPanel } from '@/components/dashboard/analytics-panel';
 
 const FAMILY_MEMBERS = ['You', 'Partner'];
 
@@ -256,6 +258,7 @@ export default function DashboardPage() {
               icon: PieChart,
               label: `Expenses (${filteredExpenses.length})`,
             },
+            { id: 'analytics', icon: BarChart3, label: 'Analytics' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -299,6 +302,17 @@ export default function DashboardPage() {
             onDelete={deleteExpense}
             onUpdateSplitRatio={updateSplitRatio}
             onResetRatio={resetToDefaultRatio}
+          />
+        )}
+
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <AnalyticsPanel
+            expenses={filteredExpenses}
+            allExpenses={expenses}
+            familyMembers={FAMILY_MEMBERS}
+            selectedYear={selectedYear}
+            selectedMonth={selectedMonth}
           />
         )}
 
