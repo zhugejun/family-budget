@@ -11,11 +11,13 @@ import {
   Plus,
   BarChart3,
   Image as ImageIcon,
+  RefreshCw,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useCategories } from '@/hooks/useCategories';
 import { useReceiptImages } from '@/hooks/useReceiptImages';
+import { useRecurringExpenses } from '@/hooks/useRecurringExpenses';
 import { processReceiptWithClaude } from '@/lib/claude';
 import { calculateSplits } from '@/lib/calculations';
 import { filterByMonth, getCurrentMonth } from '@/lib/date-utils';
@@ -27,6 +29,9 @@ import { SettingsPanel } from '@/components/dashboard/settings-panel';
 import { MonthSelector } from '@/components/dashboard/month-selector';
 import { AnalyticsPanel } from '@/components/dashboard/analytics-panel';
 import { ReceiptGallery } from '@/components/dashboard/receipt-gallery';
+import { RecurringExpenseForm } from '@/components/dashboard/recurring-expense-form';
+import { RecurringExpensesList } from '@/components/dashboard/recurring-expenses-list';
+import type { RecurringExpense } from '@/lib/recurring-utils';
 
 const FAMILY_MEMBERS = ['You', 'Partner'];
 
@@ -51,9 +56,22 @@ export default function DashboardPage() {
     uploadImage,
     deleteImage,
   } = useReceiptImages(user?.id);
+  const {
+    recurring,
+    loading: recurringLoading,
+    addRecurring,
+    updateRecurring,
+    deleteRecurring,
+    toggleActive,
+    getDue,
+    refetch: refetchRecurring,
+  } = useRecurringExpenses(user?.id);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState('upload');
+  const [showRecurringForm, setShowRecurringForm] = useState(false);
+  const [editingRecurring, setEditingRecurring] =
+    useState<RecurringExpense | null>(null);
 
   const [defaultRatio, setDefaultRatio] = useState({
     [FAMILY_MEMBERS[0]]: 50,
@@ -76,6 +94,36 @@ export default function DashboardPage() {
     setSelectedYear(year);
     setSelectedMonth(month);
   };
+
+  // Auto-generate due recurring expenses on mount
+  useEffect(() => {
+    const generateDueExpenses = async () => {
+      if (!user) return;
+
+      const dueExpenses = getDue();
+      if (dueExpenses.length === 0) return;
+
+      try {
+        const response = await fetch('/api/recurring/generate', {
+          method: 'POST',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.generated > 0) {
+            console.log(`Generated ${data.generated} recurring expenses`);
+            // Refetch expenses and recurring to update UI
+            refetchRecurring();
+            // Note: expenses will auto-refresh via useExpenses hook
+          }
+        }
+      } catch (error) {
+        console.error('Error generating recurring expenses:', error);
+      }
+    };
+
+    generateDueExpenses();
+  }, [user?.id]);
 
   const handleReceiptProcessing = async (base64Image: string) => {
     setIsProcessing(true);
@@ -200,6 +248,33 @@ export default function DashboardPage() {
     updateExpense(id, { split_ratio: { ...defaultRatio } });
   };
 
+  // Recurring expense handlers
+  const handleAddRecurring = async (
+    data: Omit<RecurringExpense, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+  ) => {
+    await addRecurring(data);
+    setShowRecurringForm(false);
+  };
+
+  const handleEditRecurring = (recurring: RecurringExpense) => {
+    setEditingRecurring(recurring);
+    setShowRecurringForm(true);
+  };
+
+  const handleUpdateRecurring = async (
+    data: Omit<RecurringExpense, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+  ) => {
+    if (!editingRecurring) return;
+    await updateRecurring(editingRecurring.id, data);
+    setShowRecurringForm(false);
+    setEditingRecurring(null);
+  };
+
+  const handleCancelRecurringForm = () => {
+    setShowRecurringForm(false);
+    setEditingRecurring(null);
+  };
+
   const updateDefaultRatio = (member: string, value: string) => {
     const newValue = Math.max(0, Math.min(100, parseInt(value) || 0));
     const otherMember = FAMILY_MEMBERS.find((m) => m !== member)!;
@@ -315,6 +390,11 @@ export default function DashboardPage() {
               icon: ImageIcon,
               label: `Gallery (${receiptImages.length})`,
             },
+            {
+              id: 'recurring',
+              icon: RefreshCw,
+              label: `Recurring (${recurring.length})`,
+            },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -389,6 +469,50 @@ export default function DashboardPage() {
               loading={imagesLoading}
             />
           </div>
+        )}
+
+        {/* Recurring Tab */}
+        {activeTab === 'recurring' && (
+          <div>
+            <div className='flex items-center justify-between mb-4'>
+              <div>
+                <h2 className='text-2xl font-bold text-stone-800'>
+                  Recurring Expenses
+                </h2>
+                <p className='text-stone-600'>
+                  Manage subscriptions, rent, and other recurring bills
+                </p>
+              </div>
+              <button
+                onClick={() => setShowRecurringForm(true)}
+                className='flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg transition-colors'
+              >
+                <Plus className='w-5 h-5' />
+                Add Recurring
+              </button>
+            </div>
+            <RecurringExpensesList
+              recurring={recurring}
+              onEdit={handleEditRecurring}
+              onDelete={deleteRecurring}
+              onToggleActive={toggleActive}
+              loading={recurringLoading}
+            />
+          </div>
+        )}
+
+        {/* Recurring Expense Form Modal */}
+        {showRecurringForm && (
+          <RecurringExpenseForm
+            onSubmit={
+              editingRecurring ? handleUpdateRecurring : handleAddRecurring
+            }
+            onCancel={handleCancelRecurringForm}
+            initialData={editingRecurring || undefined}
+            categories={categories}
+            familyMembers={FAMILY_MEMBERS}
+            defaultRatio={defaultRatio}
+          />
         )}
 
         {/* Info Box */}
