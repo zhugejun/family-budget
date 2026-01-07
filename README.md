@@ -12,7 +12,8 @@ Your family expense tracking app is **production-ready** with:
 - ✨ **AI Receipt Scanning** - Claude Vision API integration
 - 💰 **Smart Expense Splitting** - Custom ratios per expense
 - 🎨 **Category Management** - Add/edit/delete categories
-- 📱 **Fully Responsive** - Works on all devices
+- � **Month-by-Month View** - Filter expenses by month with navigation
+- �📱 **Fully Responsive** - Works on all devices
 - 🛡️ **Route Protection** - Middleware guards dashboard
 
 ### 🛠️ Tech Stack
@@ -130,6 +131,13 @@ Now you have:
 - Add new categories
 - Edit or delete existing ones
 
+**Navigate by Month:**
+
+- Use the month selector with < > arrows
+- Jump to current month with "This Month" button
+- View expenses filtered by specific month
+- See monthly totals and expense counts
+
 ## 📁 Project Structure
 
 ```
@@ -143,6 +151,11 @@ family-expense/
 │   ├── layout.tsx          # Root layout
 │   └── globals.css         # Styles + theme
 ├── components/
+│   ├── dashboard/
+│   │   ├── month-selector.tsx      # Month navigation
+│   │   ├── expense-groups.tsx      # Expense list
+│   │   ├── expense-table.tsx       # Expense table
+│   │   └── ...                     # Other components
 │   └── FamilyBudgetApp.tsx # Main app logic
 ├── hooks/
 │   ├── useAuth.ts          # Authentication
@@ -152,6 +165,7 @@ family-expense/
 │   ├── supabase.ts         # Supabase SSR client
 │   ├── claude.ts           # Claude API
 │   ├── calculations.ts     # Split calculations
+│   ├── date-utils.ts       # Month filtering utilities
 │   └── utils.ts            # Utilities
 ├── middleware.ts           # Route protection
 ├── supabase-schema.sql     # Database schema
@@ -185,7 +199,16 @@ family-expense/
    - `NEXT_PUBLIC_CLAUDE_API_KEY`
 4. Deploy!
 
-## 📚 Documentation
+## � Upcoming Features
+
+See `.agent/IMPLEMENTATION_PLAN.md` for detailed roadmap. Next features coming:
+
+- 📊 **Dashboard Analytics** - Charts and spending insights
+- 🖼️ **Receipt Image Gallery** - View and store original receipt photos
+- 🔄 **Recurring Expenses** - Auto-track subscriptions and bills
+- 💻 **Local Hosting Options** - Run without Supabase (SQLite/JSON)
+
+## �📚 Documentation
 
 - `SETUP.md` - Detailed setup guide
 - `QUICKSTART.md` - Quick reference
