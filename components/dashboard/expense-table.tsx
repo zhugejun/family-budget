@@ -2,6 +2,15 @@
 
 import React, { useState } from 'react';
 import { Users, X } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  TableFooter,
+} from '@/components/ui/table';
 import type { Expense } from '@/lib/calculations';
 import { ExpenseEditDialog } from './expense-edit-dialog';
 
@@ -158,10 +167,10 @@ export function ExpenseTable({
       )}
 
       <div className='bg-white/80 backdrop-blur rounded-2xl border border-stone-200 overflow-hidden'>
-        <table className='w-full'>
-          <thead>
-            <tr className='border-b border-stone-200 bg-stone-50/50'>
-              <th className='w-12 px-4 py-3'>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className='w-12'>
                 <input
                   type='checkbox'
                   checked={
@@ -170,32 +179,22 @@ export function ExpenseTable({
                   onChange={toggleSelectAll}
                   className='w-4 h-4 rounded border-stone-300 text-amber-600 focus:ring-amber-500 cursor-pointer'
                 />
-              </th>
-              <th className='text-left px-4 py-3 text-xs font-semibold text-stone-600 uppercase tracking-wide'>
-                Item
-              </th>
-              <th className='text-left px-4 py-3 text-xs font-semibold text-stone-600 uppercase tracking-wide w-32'>
-                Category
-              </th>
-              <th className='text-center px-4 py-3 text-xs font-semibold text-stone-600 uppercase tracking-wide w-20'>
-                Qty
-              </th>
-              <th className='text-center px-4 py-3 text-xs font-semibold text-stone-600 uppercase tracking-wide w-24'>
-                Split
-              </th>
-              <th className='text-right px-4 py-3 text-xs font-semibold text-stone-600 uppercase tracking-wide w-32'>
-                Price
-              </th>
-            </tr>
-          </thead>
-          <tbody>
+              </TableHead>
+              <TableHead>Item</TableHead>
+              <TableHead className='w-32'>Category</TableHead>
+              <TableHead className='w-20 text-center'>Qty</TableHead>
+              <TableHead className='w-24 text-center'>Split</TableHead>
+              <TableHead className='w-32 text-right'>Price</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {expenses.map((expense) => (
-              <tr
+              <TableRow
                 key={expense.id}
-                className={`group border-b border-stone-100 transition-all hover:shadow-md hover:-translate-y-0.5 ${
+                className={`group transition-all hover:shadow-md hover:-translate-y-0.5 ${
                   expense.split
                     ? 'bg-violet-50/30 hover:bg-violet-50/50'
-                    : 'bg-white hover:bg-stone-50/50'
+                    : 'hover:bg-stone-50/50'
                 } ${
                   selectedIds.has(expense.id)
                     ? 'ring-2 ring-amber-400 ring-inset'
@@ -203,7 +202,7 @@ export function ExpenseTable({
                 }`}
               >
                 {/* Checkbox */}
-                <td className='px-4 py-4'>
+                <TableCell>
                   <input
                     type='checkbox'
                     checked={selectedIds.has(expense.id)}
@@ -213,11 +212,11 @@ export function ExpenseTable({
                     }}
                     className='w-4 h-4 rounded border-stone-300 text-amber-600 focus:ring-amber-500 cursor-pointer'
                   />
-                </td>
+                </TableCell>
 
                 {/* Item Name */}
-                <td
-                  className='px-4 py-4 cursor-pointer'
+                <TableCell
+                  className='cursor-pointer'
                   onClick={() => setEditingExpense(expense)}
                 >
                   <div className='flex items-center gap-2'>
@@ -230,31 +229,31 @@ export function ExpenseTable({
                       </span>
                     )}
                   </div>
-                </td>
+                </TableCell>
 
                 {/* Category */}
-                <td
-                  className='px-4 py-4 cursor-pointer'
+                <TableCell
+                  className='cursor-pointer'
                   onClick={() => setEditingExpense(expense)}
                 >
                   <span className='text-sm text-stone-600'>
                     {expense.category}
                   </span>
-                </td>
+                </TableCell>
 
                 {/* Quantity */}
-                <td
-                  className='px-4 py-4 text-center cursor-pointer'
+                <TableCell
+                  className='text-center cursor-pointer'
                   onClick={() => setEditingExpense(expense)}
                 >
                   <span className='text-sm text-stone-600'>
                     {expense.quantity}
                   </span>
-                </td>
+                </TableCell>
 
                 {/* Split Indicator */}
-                <td
-                  className='px-4 py-4 cursor-pointer'
+                <TableCell
+                  className='cursor-pointer'
                   onClick={() => setEditingExpense(expense)}
                 >
                   <div className='flex items-center justify-center'>
@@ -267,38 +266,38 @@ export function ExpenseTable({
                       <span className='text-xs text-stone-400'>—</span>
                     )}
                   </div>
-                </td>
+                </TableCell>
 
                 {/* Price */}
-                <td
-                  className='px-4 py-4 text-right cursor-pointer'
+                <TableCell
+                  className='text-right cursor-pointer'
                   onClick={() => setEditingExpense(expense)}
                 >
                   <span className='text-lg font-bold text-stone-800 font-serif'>
                     ${(expense.price * expense.quantity).toFixed(2)}
                   </span>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-          <tfoot>
-            <tr className='border-t-2 border-stone-300 bg-stone-50'>
-              <td colSpan={5} className='px-4 py-4 text-right'>
+          </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell colSpan={5} className='text-right'>
                 <span className='text-sm font-semibold text-stone-700'>
                   Total:
                 </span>
-              </td>
-              <td className='px-4 py-4 text-right'>
+              </TableCell>
+              <TableCell className='text-right'>
                 <span className='text-xl font-bold text-stone-800 font-serif'>
                   $
                   {expenses
                     .reduce((sum, exp) => sum + exp.price * exp.quantity, 0)
                     .toFixed(2)}
                 </span>
-              </td>
-            </tr>
-          </tfoot>
-        </table>
+              </TableCell>
+            </TableRow>
+          </TableFooter>
+        </Table>
 
         {expenses.length === 0 && (
           <div className='text-center py-12 text-stone-500'>
@@ -308,18 +307,17 @@ export function ExpenseTable({
       </div>
 
       {/* Edit Dialog */}
-      {editingExpense && (
-        <ExpenseEditDialog
-          expense={editingExpense}
-          categories={categories}
-          familyMembers={familyMembers}
-          defaultRatio={defaultRatio}
-          onClose={() => setEditingExpense(null)}
-          onUpdate={onUpdate}
-          onUpdateSplitRatio={onUpdateSplitRatio}
-          onResetRatio={onResetRatio}
-        />
-      )}
+      <ExpenseEditDialog
+        open={!!editingExpense}
+        onOpenChange={(open) => !open && setEditingExpense(null)}
+        expense={editingExpense}
+        categories={categories}
+        familyMembers={familyMembers}
+        defaultRatio={defaultRatio}
+        onUpdate={onUpdate}
+        onUpdateSplitRatio={onUpdateSplitRatio}
+        onResetRatio={onResetRatio}
+      />
     </>
   );
 }

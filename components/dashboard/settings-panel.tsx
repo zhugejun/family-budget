@@ -1,10 +1,19 @@
 'use client';
 
 import React from 'react';
-import { Settings, X } from 'lucide-react';
+import { Settings } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { CategoryManager } from './category-manager';
 
 interface SettingsDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   familyMembers: string[];
   defaultRatio: Record<string, number>;
   onUpdateDefaultRatio: (member: string, value: string) => void;
@@ -12,10 +21,11 @@ interface SettingsDialogProps {
   onAddCategory: (name: string) => Promise<void>;
   onUpdateCategory: (oldName: string, newName: string) => Promise<void>;
   onDeleteCategory: (name: string) => Promise<void>;
-  onClose: () => void;
 }
 
 export function SettingsDialog({
+  open,
+  onOpenChange,
   familyMembers,
   defaultRatio,
   onUpdateDefaultRatio,
@@ -23,38 +33,26 @@ export function SettingsDialog({
   onAddCategory,
   onUpdateCategory,
   onDeleteCategory,
-  onClose,
 }: SettingsDialogProps) {
   return (
-    <div
-      className='fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 backdrop-blur-sm p-4'
-      onClick={onClose}
-    >
-      <div
-        className='bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto'
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className='flex items-center justify-between p-6 border-b border-stone-200 sticky top-0 bg-white z-10'>
-          <div className='flex items-center gap-3'>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className='max-w-2xl max-h-[90vh] overflow-hidden flex flex-col'>
+        <DialogHeader>
+          <DialogTitle className='flex items-center gap-3'>
             <div className='w-10 h-10 bg-gradient-to-br from-stone-600 to-stone-700 rounded-xl flex items-center justify-center'>
               <Settings className='w-5 h-5 text-white' />
             </div>
-            <h2 className='text-2xl font-bold text-stone-800'>Settings</h2>
-          </div>
-          <button
-            onClick={onClose}
-            className='p-2 hover:bg-stone-100 rounded-lg transition-colors'
-          >
-            <X className='w-5 h-5' />
-          </button>
-        </div>
+            <span>Settings</span>
+          </DialogTitle>
+          <DialogDescription>
+            Manage your default split ratio and expense categories
+          </DialogDescription>
+        </DialogHeader>
 
-        {/* Content */}
-        <div className='p-6 space-y-6'>
+        <div className='flex-1 overflow-y-auto pr-2 space-y-6'>
           {/* Default Split Ratio Section */}
           <div className='bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-200'>
-            <h3 className='text-lg font-semibold text-stone-800 mb-4'>
+            <h3 className='text-lg font-semibold text-stone-800 mb-2'>
               Default Split Ratio
             </h3>
             <p className='text-sm text-stone-600 mb-4'>
@@ -135,17 +133,7 @@ export function SettingsDialog({
             />
           </div>
         </div>
-
-        {/* Footer */}
-        <div className='p-6 border-t border-stone-200 bg-stone-50'>
-          <button
-            onClick={onClose}
-            className='w-full px-4 py-3 bg-stone-800 hover:bg-stone-900 text-white font-medium rounded-lg transition-colors'
-          >
-            Done
-          </button>
-        </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

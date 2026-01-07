@@ -1,41 +1,53 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Users, RotateCcw } from 'lucide-react';
+import { Users, RotateCcw } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import type { Expense } from '@/lib/calculations';
 
 interface ExpenseEditDialogProps {
-  expense: Expense;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  expense: Expense | null;
   categories: string[];
   familyMembers: string[];
   defaultRatio: Record<string, number>;
-  onClose: () => void;
   onUpdate: (id: string, field: string, value: any) => void;
   onUpdateSplitRatio: (id: string, member: string, value: string) => void;
   onResetRatio: (id: string) => void;
 }
 
 export function ExpenseEditDialog({
+  open,
+  onOpenChange,
   expense,
   categories,
   familyMembers,
   defaultRatio,
-  onClose,
   onUpdate,
   onUpdateSplitRatio,
   onResetRatio,
 }: ExpenseEditDialogProps) {
-  const [localExpense, setLocalExpense] = useState(expense);
+  const [localExpense, setLocalExpense] = useState<Expense | null>(expense);
 
   // Sync local state with prop changes
   useEffect(() => {
     setLocalExpense(expense);
   }, [expense]);
 
+  if (!localExpense) return null;
+
   const handleUpdate = (field: string, value: any) => {
-    setLocalExpense((prev) => ({ ...prev, [field]: value }));
-    onUpdate(expense.id, field, value);
+    setLocalExpense((prev) => (prev ? { ...prev, [field]: value } : prev));
+    onUpdate(localExpense.id, field, value);
   };
 
   const handleSplitRatioChange = (member: string, value: string) => {
@@ -45,8 +57,10 @@ export function ExpenseEditDialog({
       [member]: newValue,
       [otherMember]: 100 - newValue,
     };
-    setLocalExpense((prev) => ({ ...prev, split_ratio: newRatio }));
-    onUpdateSplitRatio(expense.id, member, value);
+    setLocalExpense((prev) =>
+      prev ? { ...prev, split_ratio: newRatio } : prev
+    );
+    onUpdateSplitRatio(localExpense.id, member, value);
   };
 
   const isRatioDifferentFromDefault = familyMembers.some(
@@ -54,27 +68,16 @@ export function ExpenseEditDialog({
   );
 
   return (
-    <div
-      className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200'
-      onClick={onClose}
-    >
-      <div
-        className='bg-white rounded-3xl shadow-2xl max-w-md w-full mx-4 animate-in zoom-in-95 duration-200'
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className='flex items-center justify-between px-6 py-4 border-b border-stone-200'>
-          <h2 className='text-xl font-bold text-stone-800'>Edit Expense</h2>
-          <button
-            onClick={onClose}
-            className='p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-lg transition-colors'
-          >
-            <X className='w-5 h-5' />
-          </button>
-        </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className='max-w-md'>
+        <DialogHeader>
+          <DialogTitle>Edit Expense</DialogTitle>
+          <DialogDescription>
+            Update item details, quantity, and split settings
+          </DialogDescription>
+        </DialogHeader>
 
-        {/* Content */}
-        <div className='px-6 py-6 space-y-5'>
+        <div className='space-y-5'>
           {/* Item Name */}
           <div>
             <label className='block text-sm font-medium text-stone-700 mb-2'>
@@ -183,11 +186,12 @@ export function ExpenseEditDialog({
                   {isRatioDifferentFromDefault && (
                     <button
                       onClick={() => {
-                        onResetRatio(expense.id);
-                        setLocalExpense((prev) => ({
-                          ...prev,
-                          split_ratio: { ...defaultRatio },
-                        }));
+                        onResetRatio(localExpense.id);
+                        setLocalExpense((prev) =>
+                          prev
+                            ? { ...prev, split_ratio: { ...defaultRatio } }
+                            : prev
+                        );
                       }}
                       className='flex items-center gap-1 text-xs text-violet-600 hover:text-violet-800 bg-violet-100 hover:bg-violet-200 px-2 py-1 rounded-lg transition-colors'
                     >
@@ -251,16 +255,15 @@ export function ExpenseEditDialog({
           </div>
         </div>
 
-        {/* Footer */}
-        <div className='px-6 py-4 border-t border-stone-200 flex justify-end gap-3'>
+        <DialogFooter>
           <button
-            onClick={onClose}
+            onClick={() => onOpenChange(false)}
             className='px-4 py-2 text-stone-600 hover:bg-stone-100 rounded-xl transition-colors font-medium'
           >
             Done
           </button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

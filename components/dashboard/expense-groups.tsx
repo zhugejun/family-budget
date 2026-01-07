@@ -442,18 +442,17 @@ export function ExpenseGroups({
       )}
 
       {/* Edit Dialog */}
-      {editingExpense && (
-        <ExpenseEditDialog
-          expense={editingExpense}
-          categories={categories}
-          familyMembers={familyMembers}
-          defaultRatio={defaultRatio}
-          onClose={() => setEditingExpense(null)}
-          onUpdate={onUpdate}
-          onUpdateSplitRatio={onUpdateSplitRatio}
-          onResetRatio={onResetRatio}
-        />
-      )}
+      <ExpenseEditDialog
+        open={!!editingExpense}
+        onOpenChange={(open) => !open && setEditingExpense(null)}
+        expense={editingExpense}
+        categories={categories}
+        familyMembers={familyMembers}
+        defaultRatio={defaultRatio}
+        onUpdate={onUpdate}
+        onUpdateSplitRatio={onUpdateSplitRatio}
+        onResetRatio={onResetRatio}
+      />
     </>
   );
 }

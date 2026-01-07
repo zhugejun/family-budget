@@ -337,18 +337,17 @@ export default function DashboardPage() {
           </div>
 
           {/* Settings Dialog */}
-          {showSettings && (
-            <SettingsDialog
-              familyMembers={FAMILY_MEMBERS}
-              defaultRatio={defaultRatio}
-              onUpdateDefaultRatio={updateDefaultRatio}
-              categories={categories}
-              onAddCategory={addCategoryHook}
-              onUpdateCategory={updateCategoryHook}
-              onDeleteCategory={deleteCategoryHook}
-              onClose={() => setShowSettings(false)}
-            />
-          )}
+          <SettingsDialog
+            open={showSettings}
+            onOpenChange={setShowSettings}
+            familyMembers={FAMILY_MEMBERS}
+            defaultRatio={defaultRatio}
+            onUpdateDefaultRatio={updateDefaultRatio}
+            categories={categories}
+            onAddCategory={addCategoryHook}
+            onUpdateCategory={updateCategoryHook}
+            onDeleteCategory={deleteCategoryHook}
+          />
         </div>
       </header>
 
