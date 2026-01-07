@@ -25,7 +25,7 @@ import { ExpenseGroups } from '@/components/dashboard/expense-groups';
 import { SummaryCard } from '@/components/dashboard/summary-card';
 import { ReceiptUploadZone } from '@/components/dashboard/receipt-upload-zone';
 import { ManualExpenseForm } from '@/components/dashboard/manual-expense-form';
-import { SettingsPanel } from '@/components/dashboard/settings-panel';
+import { SettingsDialog } from '@/components/dashboard/settings-panel';
 import { MonthSelector } from '@/components/dashboard/month-selector';
 import { AnalyticsPanel } from '@/components/dashboard/analytics-panel';
 import { ReceiptGallery } from '@/components/dashboard/receipt-gallery';
@@ -336,9 +336,9 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Settings Panel */}
+          {/* Settings Dialog */}
           {showSettings && (
-            <SettingsPanel
+            <SettingsDialog
               familyMembers={FAMILY_MEMBERS}
               defaultRatio={defaultRatio}
               onUpdateDefaultRatio={updateDefaultRatio}
@@ -346,6 +346,7 @@ export default function DashboardPage() {
               onAddCategory={addCategoryHook}
               onUpdateCategory={updateCategoryHook}
               onDeleteCategory={deleteCategoryHook}
+              onClose={() => setShowSettings(false)}
             />
           )}
         </div>
