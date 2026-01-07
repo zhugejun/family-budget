@@ -8,6 +8,9 @@ import {
   CheckCircle2,
   XCircle,
   FileText,
+  X,
+  Check,
+  ImageIcon,
 } from 'lucide-react';
 
 interface ReceiptUploadZoneProps {
@@ -21,28 +24,35 @@ interface ReceiptUploadZoneProps {
   };
 }
 
+interface FileWithPreview {
+  file: File;
+  preview: string;
+}
+
 export function ReceiptUploadZone({
   isProcessing,
   onMultipleImageUpload,
   processingStatus,
 }: ReceiptUploadZoneProps) {
   const [dragOver, setDragOver] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<FileWithPreview[]>([]);
 
-  const handleFiles = useCallback(
-    (files: FileList | null) => {
-      if (!files || files.length === 0) return;
+  const handleFiles = useCallback((files: FileList | null) => {
+    if (!files || files.length === 0) return;
 
-      const validFiles = Array.from(files).filter(
-        (file) =>
-          file.type.startsWith('image/') || file.type === 'application/pdf'
-      );
+    const validFiles = Array.from(files).filter(
+      (file) =>
+        file.type.startsWith('image/') || file.type === 'application/pdf'
+    );
 
-      if (validFiles.length > 0) {
-        onMultipleImageUpload(validFiles);
-      }
-    },
-    [onMultipleImageUpload]
-  );
+    // Create preview URLs for valid files
+    const filesWithPreviews = validFiles.map((file) => ({
+      file,
+      preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : '', // No preview for PDFs
+    }));
+
+    setSelectedFiles((prev) => [...prev, ...filesWithPreviews]);
+  }, []);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -52,6 +62,116 @@ export function ReceiptUploadZone({
     },
     [handleFiles]
   );
+
+  const removeFile = useCallback((index: number) => {
+    setSelectedFiles((prev) => {
+      const newFiles = [...prev];
+      // Revoke object URL to prevent memory leak
+      if (newFiles[index].preview) {
+        URL.revokeObjectURL(newFiles[index].preview);
+      }
+      newFiles.splice(index, 1);
+      return newFiles;
+    });
+  }, []);
+
+  const confirmUpload = useCallback(() => {
+    const files = selectedFiles.map((f) => f.file);
+    onMultipleImageUpload(files);
+    // Clean up preview URLs
+    selectedFiles.forEach((f) => {
+      if (f.preview) URL.revokeObjectURL(f.preview);
+    });
+    setSelectedFiles([]);
+  }, [selectedFiles, onMultipleImageUpload]);
+
+  const cancelUpload = useCallback(() => {
+    // Clean up preview URLs
+    selectedFiles.forEach((f) => {
+      if (f.preview) URL.revokeObjectURL(f.preview);
+    });
+    setSelectedFiles([]);
+  }, [selectedFiles]);
+
+  // Show file preview if files are selected
+  if (selectedFiles.length > 0 && !isProcessing) {
+    return (
+      <div className='space-y-4'>
+        <div className='flex items-center justify-between'>
+          <h3 className='text-lg font-semibold text-stone-800'>
+            Review Files ({selectedFiles.length})
+          </h3>
+          <button
+            onClick={cancelUpload}
+            className='text-sm text-stone-500 hover:text-stone-700'
+          >
+            Cancel
+          </button>
+        </div>
+
+        {/* File Grid */}
+        <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4'>
+          {selectedFiles.map((fileWithPreview, index) => (
+            <div
+              key={index}
+              className='relative group bg-white rounded-lg border-2 border-stone-200 overflow-hidden aspect-square'
+            >
+              {fileWithPreview.preview ? (
+                <img
+                  src={fileWithPreview.preview}
+                  alt={fileWithPreview.file.name}
+                  className='w-full h-full object-cover'
+                />
+              ) : (
+                <div className='w-full h-full flex flex-col items-center justify-center bg-stone-50'>
+                  <FileText className='w-12 h-12 text-stone-400 mb-2' />
+                  <span className='text-xs text-stone-500'>PDF</span>
+                </div>
+              )}
+
+              {/* Remove button */}
+              <button
+                onClick={() => removeFile(index)}
+                className='absolute top-2 right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg'
+              >
+                <X className='w-4 h-4' />
+              </button>
+
+              {/* File name tooltip */}
+              <div className='absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity'>
+                <p className='text-white text-xs truncate'>
+                  {fileWithPreview.file.name}
+                </p>
+              </div>
+            </div>
+          ))}
+
+          {/* Add more button */}
+          <label className='relative aspect-square border-2 border-dashed border-stone-300 rounded-lg hover:border-amber-400 hover:bg-amber-50 transition-all cursor-pointer flex flex-col items-center justify-center'>
+            <Upload className='w-8 h-8 text-stone-400 mb-1' />
+            <span className='text-xs text-stone-500'>Add more</span>
+            <input
+              type='file'
+              accept='image/*,application/pdf'
+              multiple
+              onChange={(e) => handleFiles(e.target.files)}
+              className='absolute inset-0 opacity-0 cursor-pointer'
+            />
+          </label>
+        </div>
+
+        {/* Confirm Button */}
+        <button
+          onClick={confirmUpload}
+          className='w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-xl shadow-lg transition-all'
+        >
+          <Check className='w-5 h-5' />
+          Process {selectedFiles.length} Receipt
+          {selectedFiles.length !== 1 ? 's' : ''}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div

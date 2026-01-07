@@ -56,6 +56,7 @@ export default function DashboardPage() {
     loading: imagesLoading,
     addImage: uploadImage,
     deleteImage,
+    refetch: refetchImages,
   } = useLocalReceiptImages();
   const {
     recurring,
@@ -270,6 +271,11 @@ export default function DashboardPage() {
       completed: successCount,
       failed: failCount,
     });
+
+    // Refresh the images gallery
+    if (successCount > 0) {
+      await refetchImages();
+    }
 
     // Show summary
     setTimeout(() => {
