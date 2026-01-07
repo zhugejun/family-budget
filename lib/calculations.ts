@@ -17,10 +17,8 @@ export interface Expense {
 
 export interface ReceiptImage {
   id: string
-  user_id: string
   receipt_group: string
-  image_url: string
-  thumbnail_url?: string
+  image_path: string
   file_name?: string
   file_size?: number
   mime_type?: string

@@ -28,6 +28,16 @@ CREATE TABLE IF NOT EXISTS settings (
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS receipt_images (
+  id TEXT PRIMARY KEY,
+  receipt_group TEXT NOT NULL,
+  image_path TEXT NOT NULL,
+  file_name TEXT,
+  file_size INTEGER,
+  mime_type TEXT,
+  uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS recurring_expenses (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,

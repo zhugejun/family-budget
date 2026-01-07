@@ -13,11 +13,11 @@ import {
   Image as ImageIcon,
   RefreshCw,
 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { useExpenses } from '@/hooks/useExpenses';
-import { useCategories } from '@/hooks/useCategories';
-import { useReceiptImages } from '@/hooks/useReceiptImages';
-import { useRecurringExpenses } from '@/hooks/useRecurringExpenses';
+import { useLocalExpenses } from '@/hooks/useLocalExpenses';
+import { useLocalCategories } from '@/hooks/useLocalCategories';
+import { useLocalReceiptImages } from '@/hooks/useLocalReceiptImages';
+import { useLocalRecurring } from '@/hooks/useLocalRecurring';
+import { useLocalSettings } from '@/hooks/useLocalSettings';
 import { processReceiptWithClaude } from '@/lib/claude';
 import { calculateSplits } from '@/lib/calculations';
 import { filterByMonth, getCurrentMonth } from '@/lib/date-utils';
@@ -37,26 +37,26 @@ import type { RecurringExpense } from '@/lib/recurring-utils';
 const FAMILY_MEMBERS = ['You', 'Partner'];
 
 export default function DashboardPage() {
-  const { user } = useAuth();
   const {
     expenses,
     loading: expensesLoading,
     addMultipleExpenses,
     updateExpense,
     deleteExpense,
-  } = useExpenses(user?.id);
+    refetch: refetchExpenses,
+  } = useLocalExpenses();
   const {
     categories,
     addCategory: addCategoryHook,
     updateCategory: updateCategoryHook,
     deleteCategory: deleteCategoryHook,
-  } = useCategories(user?.id);
+  } = useLocalCategories();
   const {
     images: receiptImages,
     loading: imagesLoading,
-    uploadImage,
+    addImage: uploadImage,
     deleteImage,
-  } = useReceiptImages(user?.id);
+  } = useLocalReceiptImages();
   const {
     recurring,
     loading: recurringLoading,
@@ -64,9 +64,28 @@ export default function DashboardPage() {
     updateRecurring,
     deleteRecurring,
     toggleActive,
-    getDue,
     refetch: refetchRecurring,
-  } = useRecurringExpenses(user?.id);
+  } = useLocalRecurring();
+  const { settings } = useLocalSettings();
+
+  // Wrapper function to upload image file
+  const uploadImageFile = async (file: File, receiptGroup: string) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('receiptGroup', receiptGroup);
+
+    const response = await fetch('/api/local/receipts', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to upload image');
+    }
+
+    const data = await response.json();
+    return data.image;
+  };
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState('analytics');
@@ -99,13 +118,8 @@ export default function DashboardPage() {
   // Auto-generate due recurring expenses on mount
   useEffect(() => {
     const generateDueExpenses = async () => {
-      if (!user) return;
-
-      const dueExpenses = getDue();
-      if (dueExpenses.length === 0) return;
-
       try {
-        const response = await fetch('/api/recurring/generate', {
+        const response = await fetch('/api/local/recurring/generate', {
           method: 'POST',
         });
 
@@ -115,7 +129,7 @@ export default function DashboardPage() {
             console.log(`Generated ${data.generated} recurring expenses`);
             // Refetch expenses and recurring to update UI
             refetchRecurring();
-            // Note: expenses will auto-refresh via useExpenses hook
+            refetchExpenses();
           }
         }
       } catch (error) {
@@ -124,7 +138,7 @@ export default function DashboardPage() {
     };
 
     generateDueExpenses();
-  }, [user?.id]);
+  }, []);
 
   const handleReceiptProcessing = async (base64Image: string) => {
     setIsProcessing(true);
@@ -227,7 +241,7 @@ export default function DashboardPage() {
         })} (${i + 1}/${files.length})`;
 
         // Upload original image (keep original for gallery)
-        const uploadedImage = await uploadImage(file, receiptGroup);
+        const uploadedImage = await uploadImageFile(file, receiptGroup);
 
         // Create expenses
         const newExpenses = items.map((item) => ({
