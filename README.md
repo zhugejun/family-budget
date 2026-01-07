@@ -29,8 +29,8 @@ This app is designed to run completely locally on your machine or private networ
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-repo/family-expense.git
-cd family-expense
+git clone https://github.com/your-repo/family-budget.git
+cd family-budget
 ```
 
 ### 2. Install dependencies
@@ -65,7 +65,7 @@ Visit **http://localhost:3000** to start tracking!
 ## 📁 Project Structure
 
 ```
-family-expense/
+family-budget/
 ├── app/
 │   ├── api/local/        # Local SQLite API routes
 │   ├── dashboard/       # Main dashboard application
