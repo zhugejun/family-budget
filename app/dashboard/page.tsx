@@ -144,7 +144,10 @@ export default function DashboardPage() {
   const handleReceiptProcessing = async (base64Image: string) => {
     setIsProcessing(true);
     try {
-      const items = await processReceiptWithClaude(base64Image, categories);
+      const { items, payment_card } = await processReceiptWithClaude(
+        base64Image,
+        categories
+      );
 
       // Generate receipt group name with timestamp
       const now = new Date();
@@ -167,6 +170,7 @@ export default function DashboardPage() {
         split_ratio: { ...defaultRatio },
         source: 'receipt' as const,
         receipt_group: receiptGroup,
+        payment_card: payment_card ?? undefined,
       }));
 
       await addMultipleExpenses(newExpenses);
@@ -224,7 +228,7 @@ export default function DashboardPage() {
         const processedBase64 = await processReceiptFile(file);
 
         // Process receipt with AI
-        const items = await processReceiptWithClaude(
+        const { items, payment_card } = await processReceiptWithClaude(
           processedBase64,
           categories
         );
@@ -255,6 +259,7 @@ export default function DashboardPage() {
           source: 'receipt' as const,
           receipt_group: receiptGroup,
           receipt_image_id: uploadedImage?.id,
+          payment_card: payment_card ?? undefined,
         }));
 
         await addMultipleExpenses(newExpenses);

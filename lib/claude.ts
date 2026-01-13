@@ -2,17 +2,20 @@
  * Process receipt image using Claude Vision API via our API route
  * @param base64Image - Base64 encoded image
  * @param categories - Available expense categories
- * @returns Array of extracted expense items
+ * @returns Object containing array of extracted expense items and payment card info
  */
 export async function processReceiptWithClaude(
   base64Image: string,
   categories: string[]
-): Promise<Array<{
-  name: string
-  price: number
-  quantity: number
-  category: string
-}>> {
+): Promise<{
+  items: Array<{
+    name: string
+    price: number
+    quantity: number
+    category: string
+  }>
+  payment_card: string | null
+}> {
   const response = await fetch('/api/process-receipt', {
     method: 'POST',
     headers: {
@@ -30,6 +33,6 @@ export async function processReceiptWithClaude(
   }
 
   const data = await response.json()
-  return data.items
+  return { items: data.items, payment_card: data.payment_card }
 }
 

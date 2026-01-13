@@ -146,6 +146,31 @@ export function ExpenseEditDialog({
             </select>
           </div>
 
+          {/* Payment Card (read-only) */}
+          {localExpense.payment_card && (
+            <div className='p-3 bg-blue-50 rounded-xl border border-blue-200'>
+              <div className='flex items-center gap-2'>
+                <svg
+                  className='w-5 h-5 text-blue-600'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <rect x='2' y='5' width='20' height='14' rx='2' />
+                  <path d='M2 10h20' />
+                </svg>
+                <div>
+                  <div className='text-xs text-blue-600 font-medium'>
+                    Payment Card
+                  </div>
+                  <div className='text-sm font-semibold text-blue-800'>
+                    {localExpense.payment_card}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Total */}
           <div className='p-4 bg-amber-50 rounded-xl border border-amber-200'>
             <div className='flex items-center justify-between'>

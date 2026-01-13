@@ -11,6 +11,7 @@ export interface Expense {
   receipt_group?: string // e.g., "Costco 12/12/2025"
   receipt_image_id?: string // Links to receipt_images table
   recurring_expense_id?: string // Links to recurring_expenses table
+  payment_card?: string // e.g., "Visa 1234" - extracted from receipt
   created_at?: string
   updated_at?: string
 }

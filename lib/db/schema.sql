@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS expenses (
   receipt_group TEXT,
   receipt_image_id TEXT,
   recurring_expense_id TEXT,
+  payment_card TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
