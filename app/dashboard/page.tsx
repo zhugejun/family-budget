@@ -102,10 +102,10 @@ export default function DashboardPage() {
 
   // Month filtering state
   const [selectedYear, setSelectedYear] = useState(
-    () => getCurrentMonth().year
+    () => getCurrentMonth().year,
   );
   const [selectedMonth, setSelectedMonth] = useState(
-    () => getCurrentMonth().month
+    () => getCurrentMonth().month,
   );
 
   // Filter expenses by selected month
@@ -144,14 +144,15 @@ export default function DashboardPage() {
   const handleReceiptProcessing = async (base64Image: string) => {
     setIsProcessing(true);
     try {
-      const { items, payment_card } = await processReceiptWithClaude(
-        base64Image,
-        categories
-      );
+      const { items, payment_card, receipt_date } =
+        await processReceiptWithClaude(base64Image, categories);
 
-      // Generate receipt group name with timestamp
+      // Generate receipt group name with receipt date or current timestamp
+      const groupDate = receipt_date
+        ? new Date(receipt_date + 'T12:00:00')
+        : new Date();
       const now = new Date();
-      const receiptGroup = `Receipt - ${now.toLocaleDateString('en-US', {
+      const receiptGroup = `Receipt - ${groupDate.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
@@ -160,6 +161,11 @@ export default function DashboardPage() {
         minute: '2-digit',
         hour12: true,
       })}`;
+
+      // If receipt_date is available, use it as the created_at timestamp
+      const createdAt = receipt_date
+        ? new Date(receipt_date + 'T12:00:00').toISOString()
+        : undefined;
 
       const newExpenses = items.map((item) => ({
         name: item.name,
@@ -171,13 +177,14 @@ export default function DashboardPage() {
         source: 'receipt' as const,
         receipt_group: receiptGroup,
         payment_card: payment_card ?? undefined,
+        created_at: createdAt,
       }));
 
       await addMultipleExpenses(newExpenses);
     } catch (error) {
       console.error('Error processing receipt:', error);
       alert(
-        'Could not process receipt. Please try again or add items manually.'
+        'Could not process receipt. Please try again or add items manually.',
       );
     }
     setIsProcessing(false);
@@ -196,7 +203,7 @@ export default function DashboardPage() {
     const oversizedFiles = files.filter((file) => !validateFileSize(file, 10));
     if (oversizedFiles.length > 0) {
       alert(
-        `${oversizedFiles.length} file(s) exceed 10MB limit. They will be skipped.`
+        `${oversizedFiles.length} file(s) exceed 10MB limit. They will be skipped.`,
       );
       files = files.filter((file) => validateFileSize(file, 10));
     }
@@ -228,22 +235,31 @@ export default function DashboardPage() {
         const processedBase64 = await processReceiptFile(file);
 
         // Process receipt with AI
-        const { items, payment_card } = await processReceiptWithClaude(
-          processedBase64,
-          categories
-        );
+        const { items, payment_card, receipt_date } =
+          await processReceiptWithClaude(processedBase64, categories);
 
-        // Generate receipt group name
+        // Generate receipt group name using receipt date if available
+        const groupDate = receipt_date
+          ? new Date(receipt_date + 'T12:00:00')
+          : new Date();
         const now = new Date();
-        const receiptGroup = `Receipt - ${now.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        })} ${now.toLocaleTimeString('en-US', {
+        const receiptGroup = `Receipt - ${groupDate.toLocaleDateString(
+          'en-US',
+          {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          },
+        )} ${now.toLocaleTimeString('en-US', {
           hour: 'numeric',
           minute: '2-digit',
           hour12: true,
         })} (${i + 1}/${files.length})`;
+
+        // If receipt_date is available, use it as the created_at timestamp
+        const createdAt = receipt_date
+          ? new Date(receipt_date + 'T12:00:00').toISOString()
+          : undefined;
 
         // Upload original image (keep original for gallery)
         const uploadedImage = await uploadImageFile(file, receiptGroup);
@@ -260,6 +276,7 @@ export default function DashboardPage() {
           receipt_group: receiptGroup,
           receipt_image_id: uploadedImage?.id,
           payment_card: payment_card ?? undefined,
+          created_at: createdAt,
         }));
 
         await addMultipleExpenses(newExpenses);
@@ -289,7 +306,7 @@ export default function DashboardPage() {
 
       if (failCount > 0) {
         alert(
-          `Batch processing complete!\n✓ ${successCount} successful\n✗ ${failCount} failed`
+          `Batch processing complete!\n✓ ${successCount} successful\n✗ ${failCount} failed`,
         );
       }
     }, 1500);
@@ -313,6 +330,15 @@ export default function DashboardPage() {
     await addMultipleExpenses([newExpense]);
   };
 
+  const handleMoveToMonth = async (
+    expenseIds: string[],
+    targetDate: string,
+  ) => {
+    for (const id of expenseIds) {
+      await updateExpense(id, { created_at: targetDate });
+    }
+  };
+
   const updateExpenseField = (id: string, field: string, value: any) => {
     updateExpense(id, { [field]: value });
   };
@@ -331,7 +357,10 @@ export default function DashboardPage() {
 
   // Recurring expense handlers
   const handleAddRecurring = async (
-    data: Omit<RecurringExpense, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+    data: Omit<
+      RecurringExpense,
+      'id' | 'user_id' | 'created_at' | 'updated_at'
+    >,
   ) => {
     await addRecurring(data);
     setShowRecurringForm(false);
@@ -343,7 +372,10 @@ export default function DashboardPage() {
   };
 
   const handleUpdateRecurring = async (
-    data: Omit<RecurringExpense, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+    data: Omit<
+      RecurringExpense,
+      'id' | 'user_id' | 'created_at' | 'updated_at'
+    >,
   ) => {
     if (!editingRecurring) return;
     await updateRecurring(editingRecurring.id, data);
@@ -368,7 +400,7 @@ export default function DashboardPage() {
   // Calculate totals from filtered expenses
   const totalAmount = filteredExpenses.reduce(
     (sum, exp) => sum + exp.price * exp.quantity,
-    0
+    0,
   );
   const splits = calculateSplits(filteredExpenses, FAMILY_MEMBERS);
 
@@ -519,6 +551,7 @@ export default function DashboardPage() {
             onDelete={deleteExpense}
             onUpdateSplitRatio={updateSplitRatio}
             onResetRatio={resetToDefaultRatio}
+            onMoveToMonth={handleMoveToMonth}
           />
         )}
 

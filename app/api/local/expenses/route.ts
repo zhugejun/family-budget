@@ -27,6 +27,8 @@ export async function POST(request: NextRequest) {
     const expense = await request.json();
     const id = randomUUID();
     const now = new Date().toISOString();
+    // Use provided created_at (e.g. from receipt date) or default to now
+    const createdAt = expense.created_at || now;
 
     const stmt = db.prepare(`
       INSERT INTO expenses (
@@ -48,7 +50,7 @@ export async function POST(request: NextRequest) {
       expense.receipt_group || null,
       expense.receipt_image_id || null,
       expense.recurring_expense_id || null,
-      now,
+      createdAt,
       now
     );
 

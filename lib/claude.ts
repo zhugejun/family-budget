@@ -15,6 +15,7 @@ export async function processReceiptWithClaude(
     category: string
   }>
   payment_card: string | null
+  receipt_date: string | null
 }> {
   const response = await fetch('/api/process-receipt', {
     method: 'POST',
@@ -33,6 +34,6 @@ export async function processReceiptWithClaude(
   }
 
   const data = await response.json()
-  return { items: data.items, payment_card: data.payment_card }
+  return { items: data.items, payment_card: data.payment_card, receipt_date: data.receipt_date }
 }
 

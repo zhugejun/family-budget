@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   ChevronDown,
   ChevronRight,
@@ -8,9 +8,11 @@ import {
   X,
   Search,
   Filter,
+  CalendarDays,
 } from 'lucide-react';
 import type { Expense } from '@/lib/calculations';
 import { ExpenseEditDialog } from './expense-edit-dialog';
+import { getMonthShortName } from '@/lib/date-utils';
 
 interface ExpenseGroupsProps {
   expenses: Expense[];
@@ -21,6 +23,89 @@ interface ExpenseGroupsProps {
   onDelete: (id: string) => void;
   onUpdateSplitRatio: (id: string, member: string, value: string) => void;
   onResetRatio: (id: string) => void;
+  onMoveToMonth?: (expenseIds: string[], targetDate: string) => void;
+}
+
+function MonthPickerDropdown({
+  onSelect,
+  onClose,
+  currentDate,
+}: {
+  onSelect: (year: number, month: number) => void;
+  onClose: () => void;
+  currentDate: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const current = new Date(currentDate);
+  const [viewYear, setViewYear] = useState(current.getFullYear());
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onClose]);
+
+  const months = Array.from({ length: 12 }, (_, i) => i);
+  const now = new Date();
+
+  return (
+    <div
+      ref={ref}
+      className='absolute right-0 top-full mt-1 z-50 bg-white rounded-xl shadow-xl border border-stone-200 p-3 w-64 animate-in fade-in zoom-in-95 duration-150'
+      onClick={(e) => e.stopPropagation()}
+    >
+      <p className='text-xs font-medium text-stone-500 mb-2 px-1'>
+        Move to month
+      </p>
+      <div className='flex items-center justify-between mb-2'>
+        <button
+          onClick={() => setViewYear(viewYear - 1)}
+          className='p-1 rounded hover:bg-stone-100 text-stone-500'
+        >
+          <ChevronDown className='w-4 h-4 rotate-90' />
+        </button>
+        <span className='text-sm font-semibold text-stone-700'>{viewYear}</span>
+        <button
+          onClick={() => setViewYear(viewYear + 1)}
+          className='p-1 rounded hover:bg-stone-100 text-stone-500'
+        >
+          <ChevronDown className='w-4 h-4 -rotate-90' />
+        </button>
+      </div>
+      <div className='grid grid-cols-4 gap-1'>
+        {months.map((m) => {
+          const isCurrentMonth =
+            current.getFullYear() === viewYear && current.getMonth() === m;
+          const isFuture =
+            viewYear > now.getFullYear() ||
+            (viewYear === now.getFullYear() && m > now.getMonth());
+          return (
+            <button
+              key={m}
+              disabled={isFuture}
+              onClick={() => {
+                onSelect(viewYear, m);
+                onClose();
+              }}
+              className={`px-2 py-1.5 text-xs rounded-lg font-medium transition-colors ${
+                isCurrentMonth
+                  ? 'bg-amber-100 text-amber-800 ring-1 ring-amber-300'
+                  : isFuture
+                    ? 'text-stone-300 cursor-not-allowed'
+                    : 'text-stone-600 hover:bg-stone-100'
+              }`}
+            >
+              {getMonthShortName(m)}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 interface ExpenseGroup {
@@ -40,6 +125,7 @@ export function ExpenseGroups({
   onDelete,
   onUpdateSplitRatio,
   onResetRatio,
+  onMoveToMonth,
 }: ExpenseGroupsProps) {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -47,6 +133,7 @@ export function ExpenseGroups({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [monthPickerGroup, setMonthPickerGroup] = useState<string | null>(null);
 
   // Group expenses by receipt_group or source
   const groups = useMemo(() => {
@@ -76,7 +163,7 @@ export function ExpenseGroups({
 
     // Convert to array and sort by date (newest first)
     return Array.from(grouped.values()).sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
     );
   }, [expenses]);
 
@@ -100,7 +187,7 @@ export function ExpenseGroups({
           expenses: filteredExpenses,
           total: filteredExpenses.reduce(
             (sum, exp) => sum + exp.price * exp.quantity,
-            0
+            0,
           ),
         };
       })
@@ -171,7 +258,7 @@ export function ExpenseGroups({
 
   const grandTotal = filteredGroups.reduce(
     (sum, group) => sum + group.total,
-    0
+    0,
   );
 
   return (
@@ -296,10 +383,10 @@ export function ExpenseGroups({
             const isExpanded = expandedGroups.has(group.id);
             const groupExpenseIds = group.expenses.map((e) => e.id);
             const allSelected = groupExpenseIds.every((id) =>
-              selectedIds.has(id)
+              selectedIds.has(id),
             );
             const someSelected = groupExpenseIds.some((id) =>
-              selectedIds.has(id)
+              selectedIds.has(id),
             );
 
             return (
@@ -342,6 +429,38 @@ export function ExpenseGroups({
                       ${group.total.toFixed(2)}
                     </div>
                   </button>
+                  {/* Move to Month button */}
+                  {onMoveToMonth && (
+                    <div className='relative'>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMonthPickerGroup(
+                            monthPickerGroup === group.id ? null : group.id,
+                          );
+                        }}
+                        className='p-2 rounded-lg text-stone-400 hover:text-amber-600 hover:bg-amber-50 transition-colors'
+                        title='Move to another month'
+                      >
+                        <CalendarDays className='w-4 h-4' />
+                      </button>
+                      {monthPickerGroup === group.id && (
+                        <MonthPickerDropdown
+                          currentDate={group.date}
+                          onClose={() => setMonthPickerGroup(null)}
+                          onSelect={(year, month) => {
+                            const targetDate = new Date(
+                              year,
+                              month,
+                              15,
+                            ).toISOString();
+                            const ids = group.expenses.map((e) => e.id);
+                            onMoveToMonth(ids, targetDate);
+                          }}
+                        />
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Group Items (Expanded) */}

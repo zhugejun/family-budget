@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
             },
             {
   type: "text",
-  text: `Extract all items from this receipt with their FINAL prices after discounts, and identify the payment method if visible.
+  text: `Extract all items from this receipt with their FINAL prices after discounts, identify the payment method if visible, and extract the receipt date.
 
 IMPORTANT - Discount Handling:
 - Discounts appear on the line BELOW their item, with a trailing minus (e.g., "3.00-")
@@ -63,14 +63,21 @@ Payment Card Extraction:
 - Extract the card type and last 4 digits (e.g., "Visa 1234", "Mastercard 5678")
 - If no card info is visible, set "payment_card" to null
 
+Receipt Date Extraction:
+- Look for the transaction date on the receipt (usually near the top or bottom)
+- Common formats: "01/15/2026", "Jan 15, 2026", "2026-01-15", "01-15-26"
+- Return the date in ISO format: "YYYY-MM-DD" (e.g., "2026-01-15")
+- If no date is visible, set "receipt_date" to null
+
 Return ONLY a valid JSON object with this structure:
 {
+  "receipt_date": "2026-01-15" or null,
   "payment_card": "Visa 1234" or null,
   "items": [{"name": "item name", "price": 8.99, "quantity": 1, "category": "Groceries"}]
 }
 
 Available categories: ${categories.join(', ')}.
-If you can't read the receipt clearly, return {"payment_card": null, "items": []}.`
+If you can't read the receipt clearly, return {"receipt_date": null, "payment_card": null, "items": []}.`
 }
           ]
         }]
@@ -98,7 +105,7 @@ If you can't read the receipt clearly, return {"payment_card": null, "items": []
     const data = await response.json()
     console.log('Claude API response:', data)
     
-    const text = data.content?.[0]?.text || '{"payment_card": null, "items": []}'
+    const text = data.content?.[0]?.text || '{"receipt_date": null, "payment_card": null, "items": []}'
     const cleaned = text.replace(/```json|```/g, '').trim()
     
     const result = JSON.parse(cleaned)
@@ -107,7 +114,9 @@ If you can't read the receipt clearly, return {"payment_card": null, "items": []
     // Handle both old array format and new object format for backwards compatibility
     const items = Array.isArray(result) ? result : (result.items || [])
     const paymentCard = Array.isArray(result) ? null : (result.payment_card || null)
+    const receiptDate = Array.isArray(result) ? null : (result.receipt_date || null)
     
+    console.log('Receipt date:', receiptDate)
     console.log('Payment card:', paymentCard)
     console.log('Items:', items)
     
@@ -126,7 +135,7 @@ If you can't read the receipt clearly, return {"payment_card": null, "items": []
     
     console.log('Combined items:', combined)
     
-    return NextResponse.json({ items: combined, payment_card: paymentCard })
+    return NextResponse.json({ items: combined, payment_card: paymentCard, receipt_date: receiptDate })
   } catch (error: any) {
     console.error('Receipt processing error:', error)
     return NextResponse.json(
