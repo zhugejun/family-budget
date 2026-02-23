@@ -22,11 +22,19 @@ export interface MemberSpending {
   percentage: number;
 }
 
+export interface ReceiptBreakdown {
+  receiptGroup: string;
+  date: string;
+  total: number;
+  count: number;
+}
+
 export interface CardSpending {
   card: string;
   total: number;
   count: number;
   percentage: number;
+  receipts: ReceiptBreakdown[];
 }
 
 export interface TrendData {
@@ -207,15 +215,23 @@ export function calculateTrendData(
  * Calculate spending breakdown by payment card
  */
 export function calculateCardSpending(expenses: Expense[]): CardSpending[] {
-  const cardMap = new Map<string, { total: number; count: number }>();
+  // Nested map: card -> receipt_group -> { total, count, date }
+  const cardMap = new Map<string, Map<string, { total: number; count: number; date: string }>>();
 
   expenses.forEach((exp) => {
     const total = exp.price * exp.quantity;
     const card = exp.payment_card || 'No Card';
-    const existing = cardMap.get(card) || { total: 0, count: 0 };
-    cardMap.set(card, {
+    const receiptGroup = exp.receipt_group || (exp.source === 'manual' ? 'Manual Entries' : 'Other');
+
+    if (!cardMap.has(card)) {
+      cardMap.set(card, new Map());
+    }
+    const receiptMap = cardMap.get(card)!;
+    const existing = receiptMap.get(receiptGroup) || { total: 0, count: 0, date: exp.created_at || new Date().toISOString() };
+    receiptMap.set(receiptGroup, {
       total: existing.total + total,
       count: existing.count + 1,
+      date: existing.date,
     });
   });
 
@@ -224,14 +240,27 @@ export function calculateCardSpending(expenses: Expense[]): CardSpending[] {
     0
   );
 
-  const data = Array.from(cardMap.entries()).map(
-    ([card, { total, count }]) => ({
+  const data = Array.from(cardMap.entries()).map(([card, receiptMap]) => {
+    const receipts: ReceiptBreakdown[] = Array.from(receiptMap.entries())
+      .map(([receiptGroup, { total, count, date }]) => ({
+        receiptGroup,
+        date,
+        total,
+        count,
+      }))
+      .sort((a, b) => b.total - a.total);
+
+    const cardTotal = receipts.reduce((sum, r) => sum + r.total, 0);
+    const cardCount = receipts.reduce((sum, r) => sum + r.count, 0);
+
+    return {
       card,
-      total,
-      count,
-      percentage: grandTotal > 0 ? (total / grandTotal) * 100 : 0,
-    })
-  );
+      total: cardTotal,
+      count: cardCount,
+      percentage: grandTotal > 0 ? (cardTotal / grandTotal) * 100 : 0,
+      receipts,
+    };
+  });
 
   return data.sort((a, b) => b.total - a.total);
 }
