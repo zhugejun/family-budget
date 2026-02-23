@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   BarChart3,
   PieChart as PieChartIcon,
@@ -10,6 +10,7 @@ import {
   ChevronDown,
   ChevronRight,
   Receipt,
+  Check,
 } from 'lucide-react';
 import type { Expense } from '@/lib/calculations';
 import {
@@ -65,6 +66,49 @@ export function AnalyticsPanel({
   const cardData = useMemo(() => calculateCardSpending(expenses), [expenses]);
 
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+
+  // Reconciliation state persisted in localStorage
+  const storageKey = `reconciled_${selectedYear}_${selectedMonth}`;
+  const [reconciledReceipts, setReconciledReceipts] = useState<Set<string>>(
+    () => {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        return saved ? new Set(JSON.parse(saved)) : new Set();
+      } catch {
+        return new Set();
+      }
+    },
+  );
+
+  // Re-load when month changes
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      setReconciledReceipts(saved ? new Set(JSON.parse(saved)) : new Set());
+    } catch {
+      setReconciledReceipts(new Set());
+    }
+  }, [storageKey]);
+
+  const toggleReconciled = useCallback(
+    (receiptGroup: string) => {
+      setReconciledReceipts((prev) => {
+        const next = new Set(prev);
+        if (next.has(receiptGroup)) {
+          next.delete(receiptGroup);
+        } else {
+          next.add(receiptGroup);
+        }
+        try {
+          localStorage.setItem(storageKey, JSON.stringify([...next]));
+        } catch {
+          /* ignore */
+        }
+        return next;
+      });
+    },
+    [storageKey],
+  );
 
   if (expenses.length === 0) {
     return (
@@ -178,6 +222,23 @@ export function AnalyticsPanel({
                           {item.receipts.length !== 1 ? 's' : ''} · {item.count}{' '}
                           item{item.count !== 1 ? 's' : ''}
                         </span>
+                        {(() => {
+                          const reconciled = item.receipts.filter((r) =>
+                            reconciledReceipts.has(r.receiptGroup),
+                          ).length;
+                          return reconciled > 0 ? (
+                            <span
+                              className={`flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded-full ${
+                                reconciled === item.receipts.length
+                                  ? 'bg-emerald-100 text-emerald-700'
+                                  : 'bg-amber-100 text-amber-700'
+                              }`}
+                            >
+                              <Check className='w-3 h-3' />
+                              {reconciled}/{item.receipts.length}
+                            </span>
+                          ) : null;
+                        })()}
                       </div>
                       <span className='text-sm font-bold text-stone-800 font-serif'>
                         ${item.total.toFixed(2)}
@@ -198,26 +259,61 @@ export function AnalyticsPanel({
                   {/* Receipt breakdown */}
                   {isExpanded && (
                     <div className='mt-2 ml-5 space-y-1 animate-in slide-in-from-top-2 duration-150'>
-                      {item.receipts.map((receipt) => (
-                        <div
-                          key={receipt.receiptGroup}
-                          className='flex items-center justify-between py-1.5 px-3 bg-stone-50 rounded-lg'
-                        >
-                          <div className='flex items-center gap-2 min-w-0'>
-                            <Receipt className='w-3.5 h-3.5 text-stone-400 shrink-0' />
-                            <span className='text-xs font-medium text-stone-600 truncate'>
-                              {receipt.receiptGroup}
-                            </span>
-                            <span className='text-xs text-stone-400 shrink-0'>
-                              {receipt.count} item
-                              {receipt.count !== 1 ? 's' : ''}
+                      {item.receipts.map((receipt) => {
+                        const isReconciled = reconciledReceipts.has(
+                          receipt.receiptGroup,
+                        );
+                        return (
+                          <div
+                            key={receipt.receiptGroup}
+                            className={`flex items-center justify-between py-1.5 px-3 rounded-lg transition-colors ${
+                              isReconciled
+                                ? 'bg-emerald-50 border border-emerald-200'
+                                : 'bg-stone-50'
+                            }`}
+                          >
+                            <div className='flex items-center gap-2 min-w-0'>
+                              <input
+                                type='checkbox'
+                                checked={isReconciled}
+                                onChange={() =>
+                                  toggleReconciled(receipt.receiptGroup)
+                                }
+                                className='w-3.5 h-3.5 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer shrink-0'
+                              />
+                              <Receipt
+                                className={`w-3.5 h-3.5 shrink-0 ${
+                                  isReconciled
+                                    ? 'text-emerald-400'
+                                    : 'text-stone-400'
+                                }`}
+                              />
+                              <span
+                                className={`text-xs font-medium truncate ${
+                                  isReconciled
+                                    ? 'text-stone-400 line-through'
+                                    : 'text-stone-600'
+                                }`}
+                              >
+                                {receipt.receiptGroup}
+                              </span>
+                              <span className='text-xs text-stone-400 shrink-0'>
+                                {receipt.count} item
+                                {receipt.count !== 1 ? 's' : ''}
+                              </span>
+                            </div>
+                            <span
+                              className={`text-xs font-bold font-serif shrink-0 ml-2 ${
+                                isReconciled
+                                  ? 'text-emerald-600'
+                                  : 'text-stone-700'
+                              }`}
+                            >
+                              ${receipt.total.toFixed(2)}
                             </span>
                           </div>
-                          <span className='text-xs font-bold text-stone-700 font-serif shrink-0 ml-2'>
-                            ${receipt.total.toFixed(2)}
-                          </span>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
