@@ -42,7 +42,7 @@ export function ReceiptUploadZone({
 
     const validFiles = Array.from(files).filter(
       (file) =>
-        file.type.startsWith('image/') || file.type === 'application/pdf'
+        file.type.startsWith('image/') || file.type === 'application/pdf',
     );
 
     // Create preview URLs for valid files
@@ -60,7 +60,7 @@ export function ReceiptUploadZone({
       setDragOver(false);
       handleFiles(e.dataTransfer.files);
     },
-    [handleFiles]
+    [handleFiles],
   );
 
   const removeFile = useCallback((index: number) => {
@@ -181,7 +181,7 @@ export function ReceiptUploadZone({
         setDragOver(true);
       }}
       onDragLeave={() => setDragOver(false)}
-      className={`relative border-2 border-dashed rounded-3xl p-12 text-center transition-all ${
+      className={`relative border-2 border-dashed rounded-3xl p-8 sm:p-12 text-center transition-all ${
         dragOver
           ? 'border-amber-400 bg-amber-50'
           : 'border-stone-300 bg-white/50 hover:border-amber-300 hover:bg-white/80'

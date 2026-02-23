@@ -38,17 +38,17 @@ export function AnalyticsPanel({
   // Calculate analytics data
   const categoryData = useMemo(
     () => calculateCategoryBreakdown(expenses),
-    [expenses]
+    [expenses],
   );
 
   const dailySpending = useMemo(
     () => calculateDailySpending(allExpenses, selectedYear, selectedMonth),
-    [allExpenses, selectedYear, selectedMonth]
+    [allExpenses, selectedYear, selectedMonth],
   );
 
   const memberSpending = useMemo(
     () => calculateMemberSpending(expenses, familyMembers),
-    [expenses, familyMembers]
+    [expenses, familyMembers],
   );
 
   const trendData = useMemo(() => {
@@ -86,10 +86,10 @@ export function AnalyticsPanel({
       {/* Charts Grid */}
       <div className='grid md:grid-cols-2 gap-6'>
         {/* Category Breakdown */}
-        <div className='bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-stone-200 shadow-sm'>
+        <div className='bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-stone-200 shadow-sm'>
           <div className='flex items-center gap-2 mb-4'>
             <PieChartIcon className='w-5 h-5 text-amber-600' />
-            <h3 className='text-lg font-bold text-stone-800'>
+            <h3 className='text-base sm:text-lg font-bold text-stone-800'>
               Spending by Category
             </h3>
           </div>
@@ -97,10 +97,10 @@ export function AnalyticsPanel({
         </div>
 
         {/* Member Comparison */}
-        <div className='bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-stone-200 shadow-sm'>
+        <div className='bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-stone-200 shadow-sm'>
           <div className='flex items-center gap-2 mb-4'>
             <Users className='w-5 h-5 text-amber-600' />
-            <h3 className='text-lg font-bold text-stone-800'>
+            <h3 className='text-base sm:text-lg font-bold text-stone-800'>
               Spending by Member
             </h3>
           </div>
@@ -109,7 +109,7 @@ export function AnalyticsPanel({
       </div>
 
       {/* Daily Spending Chart */}
-      <div className='bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-stone-200 shadow-sm'>
+      <div className='bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-stone-200 shadow-sm'>
         <div className='flex items-center gap-2 mb-4'>
           <BarChart3 className='w-5 h-5 text-amber-600' />
           <h3 className='text-lg font-bold text-stone-800'>Daily Spending</h3>

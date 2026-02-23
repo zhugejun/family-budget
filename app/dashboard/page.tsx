@@ -262,7 +262,16 @@ export default function DashboardPage() {
           : undefined;
 
         // Upload original image (keep original for gallery)
-        const uploadedImage = await uploadImageFile(file, receiptGroup);
+        // Wrapped in try/catch so image upload failure doesn't prevent expenses from saving
+        let uploadedImage: any = null;
+        try {
+          uploadedImage = await uploadImageFile(file, receiptGroup);
+        } catch (uploadError) {
+          console.error(
+            `Image upload failed for ${file.name}, saving expenses without image link:`,
+            uploadError,
+          );
+        }
 
         // Create expenses
         const newExpenses = items.map((item) => ({
@@ -419,13 +428,13 @@ export default function DashboardPage() {
     <div className='min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50'>
       {/* Header */}
       <header className='bg-white/70 backdrop-blur-lg border-b border-amber-200/50 sticky top-0 z-50'>
-        <div className='max-w-6xl mx-auto px-6 py-4'>
+        <div className='max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-3'>
               <div className='w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-200'>
                 <Receipt className='w-5 h-5 text-white' />
               </div>
-              <h1 className='text-2xl font-bold text-stone-800 font-serif'>
+              <h1 className='text-lg sm:text-2xl font-bold text-stone-800 font-serif'>
                 Family Budget
               </h1>
             </div>
@@ -464,7 +473,7 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className='max-w-6xl mx-auto px-6 py-8'>
+      <main className='max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8'>
         {/* Summary Cards */}
         <div className='grid grid-cols-2 gap-4 mb-8'>
           {FAMILY_MEMBERS.map((member, idx) => (
@@ -488,7 +497,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Tabs */}
-        <div className='flex gap-2 mb-6'>
+        <div className='flex gap-2 mb-6 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide'>
           {[
             { id: 'analytics', icon: BarChart3, label: 'Analytics' },
             {
@@ -512,7 +521,7 @@ export default function DashboardPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all ${
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-medium transition-all whitespace-nowrap text-sm sm:text-base shrink-0 ${
                 activeTab === tab.id
                   ? 'bg-stone-800 text-white shadow-lg'
                   : 'bg-white/60 text-stone-600 hover:bg-white'
@@ -588,18 +597,18 @@ export default function DashboardPage() {
         {/* Recurring Tab */}
         {activeTab === 'recurring' && (
           <div>
-            <div className='flex items-center justify-between mb-4'>
+            <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4'>
               <div>
-                <h2 className='text-2xl font-bold text-stone-800'>
+                <h2 className='text-xl sm:text-2xl font-bold text-stone-800'>
                   Recurring Expenses
                 </h2>
-                <p className='text-stone-600'>
+                <p className='text-sm sm:text-base text-stone-600'>
                   Manage subscriptions, rent, and other recurring bills
                 </p>
               </div>
               <button
                 onClick={() => setShowRecurringForm(true)}
-                className='flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg transition-colors'
+                className='flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg transition-colors self-start sm:self-auto shrink-0'
               >
                 <Plus className='w-5 h-5' />
                 Add Recurring
@@ -631,7 +640,7 @@ export default function DashboardPage() {
         />
 
         {/* Info Box */}
-        <div className='mt-8 bg-gradient-to-r from-stone-800 to-stone-700 rounded-2xl p-6 text-white'>
+        <div className='mt-8 bg-gradient-to-r from-stone-800 to-stone-700 rounded-2xl p-4 sm:p-6 text-white'>
           <h3 className='font-semibold mb-2 flex items-center gap-2'>
             <span className='text-lg'>💡</span> How it works
           </h3>

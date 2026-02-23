@@ -34,8 +34,8 @@ export async function POST(request: NextRequest) {
       INSERT INTO expenses (
         id, name, price, quantity, category, split, split_ratio,
         source, receipt_group, receipt_image_id, recurring_expense_id,
-        created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        payment_card, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
       expense.receipt_group || null,
       expense.receipt_image_id || null,
       expense.recurring_expense_id || null,
+      expense.payment_card || null,
       createdAt,
       now
     );

@@ -40,7 +40,7 @@ export function RecurringExpensesList({
   const handleDelete = async (rec: RecurringExpense) => {
     if (
       !confirm(
-        `Delete recurring expense "${rec.name}"?\n\nThis will not delete previously generated expenses.`
+        `Delete recurring expense "${rec.name}"?\n\nThis will not delete previously generated expenses.`,
       )
     ) {
       return;
@@ -91,15 +91,15 @@ export function RecurringExpensesList({
         return (
           <div
             key={rec.id}
-            className={`bg-white rounded-xl p-4 border-2 transition-all ${
+            className={`bg-white rounded-xl p-3 sm:p-4 border-2 transition-all ${
               status.status === 'due'
                 ? 'border-rose-200 shadow-lg shadow-rose-100'
                 : status.status === 'paused'
-                ? 'border-stone-200 opacity-60'
-                : 'border-stone-200 hover:border-amber-200'
+                  ? 'border-stone-200 opacity-60'
+                  : 'border-stone-200 hover:border-amber-200'
             }`}
           >
-            <div className='flex items-start justify-between gap-4'>
+            <div className='flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4'>
               {/* Left: Details */}
               <div className='flex-1'>
                 <div className='flex items-start gap-3 mb-2'>
@@ -108,8 +108,8 @@ export function RecurringExpensesList({
                       status.status === 'due'
                         ? 'bg-rose-100'
                         : status.status === 'paused'
-                        ? 'bg-stone-100'
-                        : 'bg-emerald-100'
+                          ? 'bg-stone-100'
+                          : 'bg-emerald-100'
                     }`}
                   >
                     <RefreshCw
@@ -117,8 +117,8 @@ export function RecurringExpensesList({
                         status.status === 'due'
                           ? 'text-rose-600'
                           : status.status === 'paused'
-                          ? 'text-stone-500'
-                          : 'text-emerald-600'
+                            ? 'text-stone-500'
+                            : 'text-emerald-600'
                       }`}
                     />
                   </div>
@@ -202,7 +202,7 @@ export function RecurringExpensesList({
               </div>
 
               {/* Right: Actions */}
-              <div className='flex flex-col gap-2'>
+              <div className='flex sm:flex-col gap-2 self-end sm:self-start'>
                 <button
                   onClick={() => handleToggleActive(rec)}
                   disabled={togglingId === rec.id}

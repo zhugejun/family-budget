@@ -41,7 +41,7 @@ export function MonthSelector({
   const isCurrent = isCurrentMonth(year, month);
 
   return (
-    <div className='flex items-center justify-between bg-white/80 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-sm border border-amber-100'>
+    <div className='flex items-center justify-between bg-white/80 backdrop-blur-sm rounded-2xl px-3 sm:px-6 py-3 sm:py-4 shadow-sm border border-amber-100'>
       {/* Previous Month Button */}
       <button
         onClick={handlePrevious}
@@ -56,7 +56,7 @@ export function MonthSelector({
         <div className='text-center'>
           <div className='flex items-center gap-2'>
             <Calendar className='w-5 h-5 text-amber-600' />
-            <h2 className='text-2xl font-bold text-stone-800 font-serif'>
+            <h2 className='text-lg sm:text-2xl font-bold text-stone-800 font-serif'>
               {formatMonth(year, month)}
             </h2>
           </div>
@@ -71,7 +71,7 @@ export function MonthSelector({
         {!isCurrent && (
           <button
             onClick={handleToday}
-            className='ml-4 px-3 py-1.5 text-sm font-medium bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-lg transition-all'
+            className='ml-2 sm:ml-4 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-lg transition-all'
           >
             This Month
           </button>

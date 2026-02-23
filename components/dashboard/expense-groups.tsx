@@ -9,6 +9,7 @@ import {
   Search,
   Filter,
   CalendarDays,
+  CreditCard,
 } from 'lucide-react';
 import type { Expense } from '@/lib/calculations';
 import { ExpenseEditDialog } from './expense-edit-dialog';
@@ -294,7 +295,7 @@ export function ExpenseGroups({
 
       {/* Bulk Actions Toolbar */}
       {hasSelection && (
-        <div className='mb-4 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between animate-in slide-in-from-top duration-200'>
+        <div className='mb-4 bg-amber-50 border border-amber-200 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in slide-in-from-top duration-200'>
           <div className='flex items-center gap-3'>
             <span className='text-sm font-medium text-stone-700'>
               {selectedIds.size} item{selectedIds.size > 1 ? 's' : ''} selected
@@ -306,7 +307,7 @@ export function ExpenseGroups({
               <X className='w-4 h-4' />
             </button>
           </div>
-          <div className='flex items-center gap-2'>
+          <div className='flex items-center gap-2 flex-wrap'>
             <button
               onClick={handleMarkAsSplit}
               disabled={!hasNonSplitItems}
@@ -395,7 +396,7 @@ export function ExpenseGroups({
                 className='bg-white/80 backdrop-blur rounded-2xl border border-stone-200 overflow-hidden'
               >
                 {/* Group Header */}
-                <div className='flex items-center gap-3 p-4 hover:bg-stone-50/50 transition-colors'>
+                <div className='flex items-center gap-2 sm:gap-3 p-3 sm:p-4 hover:bg-stone-50/50 transition-colors'>
                   <input
                     type='checkbox'
                     checked={allSelected}
@@ -415,8 +416,8 @@ export function ExpenseGroups({
                     ) : (
                       <ChevronRight className='w-5 h-5 text-stone-400' />
                     )}
-                    <div className='flex-1'>
-                      <div className='font-semibold text-stone-800'>
+                    <div className='flex-1 min-w-0'>
+                      <div className='font-semibold text-stone-800 truncate'>
                         {group.name}
                       </div>
                       <div className='text-xs text-stone-500'>
@@ -425,7 +426,18 @@ export function ExpenseGroups({
                         {group.expenses.length > 1 ? 's' : ''}
                       </div>
                     </div>
-                    <div className='text-lg font-bold text-stone-800 font-serif'>
+                    {(() => {
+                      const card = group.expenses.find(
+                        (e) => e.payment_card,
+                      )?.payment_card;
+                      return card ? (
+                        <div className='hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-stone-100 text-stone-500 rounded-full shrink-0'>
+                          <CreditCard className='w-3.5 h-3.5' />
+                          <span className='text-xs font-medium'>{card}</span>
+                        </div>
+                      ) : null;
+                    })()}
+                    <div className='text-base sm:text-lg font-bold text-stone-800 font-serif shrink-0'>
                       ${group.total.toFixed(2)}
                     </div>
                   </button>
@@ -466,7 +478,8 @@ export function ExpenseGroups({
                 {/* Group Items (Expanded) */}
                 {isExpanded && (
                   <div className='border-t border-stone-200'>
-                    <table className='w-full'>
+                    {/* Desktop table */}
+                    <table className='w-full hidden sm:table'>
                       <tbody>
                         {group.expenses.map((expense) => (
                           <tr
@@ -542,6 +555,65 @@ export function ExpenseGroups({
                         ))}
                       </tbody>
                     </table>
+
+                    {/* Mobile card layout */}
+                    <div className='sm:hidden divide-y divide-stone-100'>
+                      {group.expenses.map((expense) => (
+                        <div
+                          key={expense.id}
+                          className={`p-3 transition-all ${
+                            expense.split ? 'bg-violet-50/30' : ''
+                          } ${
+                            selectedIds.has(expense.id)
+                              ? 'ring-2 ring-inset ring-amber-400'
+                              : ''
+                          }`}
+                        >
+                          <div className='flex items-start gap-3'>
+                            <input
+                              type='checkbox'
+                              checked={selectedIds.has(expense.id)}
+                              onChange={() => toggleSelection(expense.id)}
+                              className='w-4 h-4 mt-1 rounded border-stone-300 text-amber-600 focus:ring-amber-500 cursor-pointer shrink-0'
+                            />
+                            <div
+                              className='flex-1 min-w-0 cursor-pointer'
+                              onClick={() => setEditingExpense(expense)}
+                            >
+                              <div className='flex items-start justify-between gap-2'>
+                                <span className='font-medium text-stone-800 truncate'>
+                                  {expense.name}
+                                </span>
+                                <span className='text-base font-bold text-stone-800 font-serif shrink-0'>
+                                  $
+                                  {(expense.price * expense.quantity).toFixed(
+                                    2,
+                                  )}
+                                </span>
+                              </div>
+                              <div className='flex items-center gap-2 mt-1'>
+                                <span className='text-xs text-stone-500'>
+                                  {expense.category}
+                                </span>
+                                {expense.quantity > 1 && (
+                                  <span className='text-xs text-stone-400'>
+                                    ×{expense.quantity}
+                                  </span>
+                                )}
+                                {expense.split && (
+                                  <div className='flex items-center gap-1 px-1.5 py-0.5 bg-violet-100 text-violet-700 rounded-full'>
+                                    <Users className='w-3 h-3' />
+                                    <span className='text-xs font-medium'>
+                                      Split
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -552,7 +624,7 @@ export function ExpenseGroups({
 
       {/* Grand Total */}
       {filteredGroups.length > 0 && (
-        <div className='mt-4 bg-stone-800 rounded-2xl p-4 flex items-center justify-between'>
+        <div className='mt-4 bg-stone-800 rounded-2xl p-3 sm:p-4 flex items-center justify-between'>
           <span className='text-sm font-semibold text-white'>Grand Total:</span>
           <span className='text-2xl font-bold text-white font-serif'>
             ${grandTotal.toFixed(2)}
