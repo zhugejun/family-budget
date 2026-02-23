@@ -393,7 +393,7 @@ export function ExpenseGroups({
             return (
               <div
                 key={group.id}
-                className='bg-white/80 backdrop-blur rounded-2xl border border-stone-200 overflow-hidden'
+                className='bg-white/80 backdrop-blur rounded-2xl border border-stone-200'
               >
                 {/* Group Header */}
                 <div className='flex items-center gap-2 sm:gap-3 p-3 sm:p-4 hover:bg-stone-50/50 transition-colors'>
@@ -477,7 +477,7 @@ export function ExpenseGroups({
 
                 {/* Group Items (Expanded) */}
                 {isExpanded && (
-                  <div className='border-t border-stone-200'>
+                  <div className='border-t border-stone-200 overflow-hidden rounded-b-2xl'>
                     {/* Desktop table */}
                     <table className='w-full hidden sm:table'>
                       <tbody>

@@ -325,6 +325,7 @@ export default function DashboardPage() {
     name: string;
     price: string;
     category: string;
+    payment_card?: string;
   }) => {
     const newExpense = {
       name: item.name,
@@ -334,6 +335,7 @@ export default function DashboardPage() {
       split: false,
       split_ratio: { ...defaultRatio },
       source: 'manual' as const,
+      payment_card: item.payment_card,
     };
 
     await addMultipleExpenses([newExpense]);

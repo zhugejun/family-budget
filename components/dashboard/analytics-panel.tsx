@@ -6,6 +6,7 @@ import {
   PieChart as PieChartIcon,
   Users,
   TrendingUp,
+  CreditCard,
 } from 'lucide-react';
 import type { Expense } from '@/lib/calculations';
 import {
@@ -13,6 +14,7 @@ import {
   calculateDailySpending,
   calculateMemberSpending,
   calculateTrendData,
+  calculateCardSpending,
 } from '@/lib/analytics';
 import { filterByMonth, getPreviousMonth } from '@/lib/date-utils';
 import { CategoryPieChart } from './category-pie-chart';
@@ -56,6 +58,8 @@ export function AnalyticsPanel({
     const lastMonthExpenses = filterByMonth(allExpenses, prev.year, prev.month);
     return calculateTrendData(expenses, lastMonthExpenses);
   }, [expenses, allExpenses, selectedYear, selectedMonth]);
+
+  const cardData = useMemo(() => calculateCardSpending(expenses), [expenses]);
 
   if (expenses.length === 0) {
     return (
@@ -116,6 +120,61 @@ export function AnalyticsPanel({
         </div>
         <SpendingChart data={dailySpending} />
       </div>
+
+      {/* Spending by Card */}
+      {cardData.length > 0 && (
+        <div className='bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-stone-200 shadow-sm'>
+          <div className='flex items-center gap-2 mb-4'>
+            <CreditCard className='w-5 h-5 text-amber-600' />
+            <h3 className='text-base sm:text-lg font-bold text-stone-800'>
+              Spending by Card
+            </h3>
+          </div>
+          <div className='space-y-3'>
+            {cardData.map((item, index) => {
+              const colors = [
+                'bg-amber-500',
+                'bg-orange-500',
+                'bg-emerald-500',
+                'bg-violet-500',
+                'bg-cyan-500',
+                'bg-rose-500',
+                'bg-blue-500',
+              ];
+              const barColor = colors[index % colors.length];
+              return (
+                <div key={item.card}>
+                  <div className='flex items-center justify-between mb-1'>
+                    <div className='flex items-center gap-2'>
+                      <CreditCard className='w-3.5 h-3.5 text-stone-400' />
+                      <span className='text-sm font-medium text-stone-700'>
+                        {item.card}
+                      </span>
+                      <span className='text-xs text-stone-400'>
+                        {item.count} item{item.count !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    <span className='text-sm font-bold text-stone-800 font-serif'>
+                      ${item.total.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className='h-2 bg-stone-100 rounded-full overflow-hidden'>
+                    <div
+                      className={`h-full ${barColor} rounded-full transition-all duration-500`}
+                      style={{ width: `${item.percentage}%` }}
+                    />
+                  </div>
+                  <div className='text-right mt-0.5'>
+                    <span className='text-xs text-stone-400'>
+                      {item.percentage.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

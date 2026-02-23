@@ -22,6 +22,13 @@ export interface MemberSpending {
   percentage: number;
 }
 
+export interface CardSpending {
+  card: string;
+  total: number;
+  count: number;
+  percentage: number;
+}
+
 export interface TrendData {
   avgDailySpending: number;
   highestExpense: Expense | null;
@@ -194,6 +201,39 @@ export function calculateTrendData(
     totalThisMonth,
     totalLastMonth,
   };
+}
+
+/**
+ * Calculate spending breakdown by payment card
+ */
+export function calculateCardSpending(expenses: Expense[]): CardSpending[] {
+  const cardMap = new Map<string, { total: number; count: number }>();
+
+  expenses.forEach((exp) => {
+    const total = exp.price * exp.quantity;
+    const card = exp.payment_card || 'No Card';
+    const existing = cardMap.get(card) || { total: 0, count: 0 };
+    cardMap.set(card, {
+      total: existing.total + total,
+      count: existing.count + 1,
+    });
+  });
+
+  const grandTotal = expenses.reduce(
+    (sum, exp) => sum + exp.price * exp.quantity,
+    0
+  );
+
+  const data = Array.from(cardMap.entries()).map(
+    ([card, { total, count }]) => ({
+      card,
+      total,
+      count,
+      percentage: grandTotal > 0 ? (total / grandTotal) * 100 : 0,
+    })
+  );
+
+  return data.sort((a, b) => b.total - a.total);
 }
 
 /**

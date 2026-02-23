@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, CreditCard } from 'lucide-react';
 
 interface ManualExpenseFormProps {
   categories: string[];
@@ -9,6 +9,7 @@ interface ManualExpenseFormProps {
     name: string;
     price: string;
     category: string;
+    payment_card?: string;
   }) => void;
 }
 
@@ -20,12 +21,25 @@ export function ManualExpenseForm({
     name: '',
     price: '',
     category: categories[0] || 'Other',
+    cardLastFour: '',
   });
 
   const handleSubmit = () => {
     if (!manualItem.name || !manualItem.price) return;
-    onAddExpense(manualItem);
-    setManualItem({ name: '', price: '', category: categories[0] || 'Other' });
+    onAddExpense({
+      name: manualItem.name,
+      price: manualItem.price,
+      category: manualItem.category,
+      payment_card: manualItem.cardLastFour
+        ? `Card •••• ${manualItem.cardLastFour}`
+        : undefined,
+    });
+    setManualItem({
+      name: '',
+      price: '',
+      category: categories[0] || 'Other',
+      cardLastFour: '',
+    });
   };
 
   return (
@@ -34,7 +48,7 @@ export function ManualExpenseForm({
         <Plus className='w-5 h-5 text-amber-600' />
         Add Expense Manually
       </h3>
-      <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-4'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
         <input
           type='text'
           placeholder='Item name'
@@ -70,6 +84,20 @@ export function ManualExpenseForm({
             </option>
           ))}
         </select>
+        <div className='relative'>
+          <CreditCard className='absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400' />
+          <input
+            type='text'
+            placeholder='Card last 4 digits (optional)'
+            maxLength={4}
+            value={manualItem.cardLastFour}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, '');
+              setManualItem((prev) => ({ ...prev, cardLastFour: val }));
+            }}
+            className='w-full pl-11 pr-4 py-3 rounded-xl border border-stone-200 bg-white focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent'
+          />
+        </div>
       </div>
       <button
         onClick={handleSubmit}
